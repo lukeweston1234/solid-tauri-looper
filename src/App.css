@@ -19,6 +19,7 @@
 
 body {
   font-family: 'IngramMono';
+  color: var(--primary);
 }
 
 
