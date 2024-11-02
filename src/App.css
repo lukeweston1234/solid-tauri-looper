@@ -10,6 +10,19 @@
   --time-marker: #8FFA6A;
 }
 
+@font-face {
+  font-family: 'IngramMono';
+  src: url("./assets/fonts/ingram-mono-regular.ttf");
+  font-style: normal;
+  font-weight: 400;
+}
+
+body {
+  font-family: 'IngramMono';
+}
+
+
+
 .lighting-left {
   position: absolute;
   width: 2642px;

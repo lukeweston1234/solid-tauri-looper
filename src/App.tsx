@@ -1,5 +1,5 @@
 import "./App.css";
-import Lighting from "./shared/ui/lighting";
+import Lighting from "./shared/ui/lighting/lighting";
 
 export default function App() {
   return (
