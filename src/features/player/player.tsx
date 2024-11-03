@@ -12,10 +12,38 @@ export function Player() {
       reverbWet: 1,
       volume: 1,
     },
+    {
+      index: 1,
+      displayBuffer: [],
+      isMuted: false,
+      isSoloed: false,
+      reverbWet: 1,
+      volume: 1,
+    },
+    {
+      index: 2,
+      displayBuffer: [],
+      isMuted: false,
+      isSoloed: false,
+      reverbWet: 1,
+      volume: 1,
+    },
+    {
+      index: 3,
+      displayBuffer: [],
+      isMuted: false,
+      isSoloed: false,
+      reverbWet: 1,
+      volume: 1,
+    },
   ];
   return (
     <div class="w-full h-full flex flex-col">
-      <For each={testData}>{(child) => <Track {...child}></Track>}</For>
+      <For each={testData}>
+        {(child, i) => (
+          <Track {...child} isLast={i() === testData.length - 1}></Track>
+        )}
+      </For>
     </div>
   );
 }
