@@ -1,7 +1,6 @@
 import "./App.css";
 import Header from "./shared/ui/header/header";
 import Lighting from "./shared/ui/lighting/lighting";
-import Slider from "./shared/ui/slider/slider";
 
 export default function App() {
   return (
@@ -11,13 +10,14 @@ export default function App() {
       <h1 class="text-3xl font-bold underline text-app-primary">
         Hello world!
       </h1>
-      <Slider
-        direction="x"
-        initialValue={0}
+      <input
+        id="default-range"
+        type="range"
         min={0}
-        max={120}
-        onSlide={(x) => console.log(x)}
-      ></Slider>
+        max={50}
+        onInput={(e) => console.log(e.target.value)}
+        value="50"
+      />{" "}
     </div>
   );
 }
