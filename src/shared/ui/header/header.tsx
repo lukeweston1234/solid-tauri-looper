@@ -1,5 +1,5 @@
 import { useAppContext } from "../../../core/app-state/app.context";
-import { createEffect } from "solid-js";
+import { createEffect, Show } from "solid-js";
 
 export default function Header() {
   const [appState, { setVolume, setStatus }] = useAppContext();
@@ -34,21 +34,55 @@ export default function Header() {
         </div>
       </div>
       <div class="flex gap-4 items-center justify-center">
-        <svg
-          width="16"
-          height="18"
-          viewBox="0 0 16 18"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          class="stroke-app-primary"
+        <Show
+          when={appState.status === "paused"}
+          fallback={
+            <button
+              class="w-[14px]"
+              onClick={() =>
+                setStatus(appState.status === "playing" ? "paused" : "playing")
+              }
+            >
+              <svg
+                width="16"
+                height="18"
+                viewBox="0 0 16 18"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                class={`${
+                  appState.status === "playing"
+                    ? "fill-app-primary"
+                    : "stroke-app-primary"
+                }`}
+              >
+                <path
+                  d="M1 2.65308C1 1.79708 1.917 1.25508 2.667 1.66708L14.207 8.01408C14.3836 8.11112 14.531 8.25382 14.6336 8.42727C14.7362 8.60072 14.7903 8.79855 14.7903 9.00008C14.7903 9.20161 14.7362 9.39944 14.6336 9.57289C14.531 9.74634 14.3836 9.88904 14.207 9.98608L2.667 16.3331C2.49569 16.4273 2.30278 16.4752 2.10731 16.4721C1.91184 16.469 1.72054 16.4151 1.55227 16.3155C1.384 16.216 1.24457 16.0744 1.14773 15.9045C1.05089 15.7347 0.99997 15.5426 1 15.3471V2.65308Z"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+          }
         >
-          <path
-            d="M1 2.65308C1 1.79708 1.917 1.25508 2.667 1.66708L14.207 8.01408C14.3836 8.11112 14.531 8.25382 14.6336 8.42727C14.7362 8.60072 14.7903 8.79855 14.7903 9.00008C14.7903 9.20161 14.7362 9.39944 14.6336 9.57289C14.531 9.74634 14.3836 9.88904 14.207 9.98608L2.667 16.3331C2.49569 16.4273 2.30278 16.4752 2.10731 16.4721C1.91184 16.469 1.72054 16.4151 1.55227 16.3155C1.384 16.216 1.24457 16.0744 1.14773 15.9045C1.05089 15.7347 0.99997 15.5426 1 15.3471V2.65308Z"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
+          <button onClick={() => setStatus("playing")}>
+            <svg
+              width="11"
+              height="15"
+              viewBox="0 0 11 15"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              class="fill-app-primary w-[14px]"
+            >
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M0 0.75C0 0.551088 0.0790175 0.360322 0.21967 0.21967C0.360322 0.0790175 0.551088 0 0.75 0H2.25C2.44891 0 2.63968 0.0790175 2.78033 0.21967C2.92098 0.360322 3 0.551088 3 0.75V14.25C3 14.4489 2.92098 14.6397 2.78033 14.7803C2.63968 14.921 2.44891 15 2.25 15H0.75C0.551088 15 0.360322 14.921 0.21967 14.7803C0.0790175 14.6397 0 14.4489 0 14.25V0.75ZM7.5 0.75C7.5 0.551088 7.57902 0.360322 7.71967 0.21967C7.86032 0.0790175 8.05109 0 8.25 0H9.75C9.94891 0 10.1397 0.0790175 10.2803 0.21967C10.421 0.360322 10.5 0.551088 10.5 0.75V14.25C10.5 14.4489 10.421 14.6397 10.2803 14.7803C10.1397 14.921 9.94891 15 9.75 15H8.25C8.05109 15 7.86032 14.921 7.71967 14.7803C7.57902 14.6397 7.5 14.4489 7.5 14.25V0.75Z"
+              />
+            </svg>
+          </button>
+        </Show>
+
         <button
           onClick={() =>
             setStatus(appState.status === "recording" ? "playing" : "recording")
@@ -69,24 +103,29 @@ export default function Header() {
             <circle cx="8.79028" cy="8.47217" r="7.25" stroke-width="1.5" />
           </svg>
         </button>
-
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          class="stroke-app-primary"
-        >
-          <rect
-            x="1.54028"
-            y="1.22217"
-            width="13.5"
-            height="13.5"
-            rx="1.25"
-            stroke-width="1.5"
-          />
-        </svg>
+        <button onClick={() => setStatus("stopped")}>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            class={`${
+              appState.status === "stopped"
+                ? "fill-app-primary"
+                : "stroke-app-primary"
+            }`}
+          >
+            <rect
+              x="1.54028"
+              y="1.22217"
+              width="13.5"
+              height="13.5"
+              rx="1.25"
+              stroke-width="1.5"
+            />
+          </svg>
+        </button>
       </div>
       <div class="flex gap-[72px] items-center justify-end">
         <input
