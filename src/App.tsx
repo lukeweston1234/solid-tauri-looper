@@ -6,7 +6,7 @@ import Lighting from "./shared/ui/lighting/lighting";
 export default function App() {
   return (
     <AppStateProvider>
-      <div class="w-screen h-screen bg-app-background p-6 overflow-hidden flex flex-col gap-6">
+      <div class="w-screen h-screen bg-app-background p-8 overflow-hidden flex flex-col gap-6">
         <Lighting />
         <Header />
         <h1 class="text-3xl font-bold underline text-app-primary">

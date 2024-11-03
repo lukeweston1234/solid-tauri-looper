@@ -77,7 +77,7 @@ export default function Header() {
           />
         </svg>
       </div>
-      <div class="flex gap-6 items-center">
+      <div class="flex gap-[72px] items-center justify-end">
         <input
           id="default-range"
           type="range"
@@ -88,6 +88,10 @@ export default function Header() {
           value={appState.masterVolume}
           class="cursor-pointer"
         />
+        <div class="flex gap-6">
+          <span>{`${appState.bpm} BPM`}</span>
+          <span>{`${appState.timeSignature.beatsPerMeasure}/${appState.timeSignature.beatValue}`}</span>
+        </div>
       </div>
     </div>
   );
