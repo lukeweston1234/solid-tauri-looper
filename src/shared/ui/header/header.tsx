@@ -1,4 +1,11 @@
+import { useAppContext } from "../../../core/app-state/app.context";
+import { createEffect } from "solid-js";
+
 export default function Header() {
+  const [appState, { setVolume }] = useAppContext();
+  createEffect(() => {
+    console.log(appState.masterVolume);
+  });
   return (
     <div class="w-full grid-cols-3 grid">
       <div class="flex gap-6">
@@ -70,7 +77,18 @@ export default function Header() {
           />
         </svg>
       </div>
-      <div></div>
+      <div class="flex gap-6 items-center">
+        <input
+          id="default-range"
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          onInput={(e) => setVolume(Number(e.target.value))}
+          value={appState.masterVolume}
+          class="cursor-pointer"
+        />
+      </div>
     </div>
   );
 }
