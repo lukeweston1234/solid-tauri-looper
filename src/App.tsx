@@ -12,7 +12,7 @@ export default function App() {
         <Lighting />
         <Header />
         <Player />
-        <Knob></Knob>
+        <Knob debounceTime={300} onValueChange={(x) => console.log(x)}></Knob>
       </div>
     </AppStateProvider>
   );

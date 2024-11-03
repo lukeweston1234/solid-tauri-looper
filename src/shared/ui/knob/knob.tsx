@@ -1,10 +1,16 @@
 import { createSignal } from "solid-js";
 
-export default function Knob() {
+export default function Knob(props: {
+  onValueChange: (newPercentage: number) => any;
+  debounceTime: number | null;
+}) {
+  let debounceTime = props.debounceTime || 200;
   const SPEED = 0.03;
 
   const [percentage, setPercentage] = createSignal(0);
   const [initalY, setInitialY] = createSignal<number | null>(null);
+
+  let debounceTimeout: any;
 
   function onPointerDown(event: MouseEvent) {
     document.addEventListener("pointermove", onPointerMove);
@@ -16,8 +22,19 @@ export default function Knob() {
     let y = initalY();
     if (!y) return;
     let deltaY = y - event.clientY;
-    setPercentage((prev) => Math.min(Math.max(0, prev + deltaY * SPEED), 1));
+
+    let newPercentage =
+      Math.round(
+        Math.min(Math.max(0, percentage() + deltaY * SPEED), 1) * 100
+      ) / 100;
+
+    setPercentage(newPercentage);
     setInitialY(event.clientY);
+
+    if (debounceTimeout) clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(() => {
+      props.onValueChange && props.onValueChange(newPercentage);
+    }, debounceTime);
   }
 
   function onPointerUp(event: MouseEvent) {
