@@ -1,4 +1,5 @@
-export interface TimeSignature {
+export interface TimeInformation {
+  bars: number;
   beatsPerMeasure: number; // 6 in 6/8
   beatValue: number; // 2 in 3/2
 }
@@ -14,7 +15,8 @@ export type AppContextType = readonly [
     readonly setVolume: (volume: number) => void;
     readonly setTimeSignature: (
       beatsPerMeasure: number,
-      beatValue: number
+      beatValue: number,
+      bars: number
     ) => void;
   }
 ];
@@ -23,6 +25,6 @@ export interface AppState {
   bpm: number;
   masterVolume: number;
   status: AppStatus;
-  timeSignature: TimeSignature;
+  timeInformation: TimeInformation;
   isMetronomeOn: boolean;
 }

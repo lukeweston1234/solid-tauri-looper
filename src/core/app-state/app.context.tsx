@@ -1,4 +1,4 @@
-import { JSXElement, createContext, createEffect, useContext } from "solid-js";
+import { JSXElement, createContext, useContext } from "solid-js";
 import { createStore } from "solid-js/store";
 import { AppContextType, AppState, AppStatus } from "./app.context.model";
 
@@ -10,18 +10,24 @@ export function AppStateProvider(props: { children: JSXElement }) {
     masterVolume: 1,
     status: "stopped",
     isMetronomeOn: false,
-    timeSignature: {
-      beatsPerMeasure: 4,
+    timeInformation: {
+      bars: 2,
       beatValue: 4,
+      beatsPerMeasure: 4,
     },
   });
 
-  function setTimeSignature(beatsPerMeasure: number, beatValue: number) {
+  function setTimeInformation(
+    beatsPerMeasure: number,
+    beatValue: number,
+    bars: number
+  ) {
     setState((prevState) => ({
       ...prevState,
-      timeSignature: {
+      timeInformation: {
         beatsPerMeasure: beatsPerMeasure,
         beatValue: beatValue,
+        bars: bars,
       },
     }));
   }
@@ -61,7 +67,7 @@ export function AppStateProvider(props: { children: JSXElement }) {
       setBPM,
       toggleMetronome,
       setVolume,
-      setTimeSignature,
+      setTimeSignature: setTimeInformation,
     },
   ] as const;
 

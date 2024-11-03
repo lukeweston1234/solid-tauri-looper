@@ -90,7 +90,7 @@ export default function Header() {
         />
         <div class="flex gap-6">
           <span>{`${appState.bpm} BPM`}</span>
-          <span>{`${appState.timeSignature.beatsPerMeasure}/${appState.timeSignature.beatValue}`}</span>
+          <span>{`${appState.timeInformation.beatsPerMeasure}/${appState.timeInformation.beatValue}`}</span>
         </div>
       </div>
     </div>
