@@ -2,7 +2,7 @@ import { useAppContext } from "../../../core/app-state/app.context";
 import { createEffect } from "solid-js";
 
 export default function Header() {
-  const [appState, { setVolume }] = useAppContext();
+  const [appState, { setVolume, setStatus }] = useAppContext();
   createEffect(() => {
     console.log(appState.masterVolume);
   });
@@ -33,7 +33,7 @@ export default function Header() {
           <span class="text-sm">TEMP 54°C</span>
         </div>
       </div>
-      <div class="flex gap-6 items-center justify-center">
+      <div class="flex gap-4 items-center justify-center">
         <svg
           width="16"
           height="18"
@@ -49,16 +49,27 @@ export default function Header() {
             stroke-linejoin="round"
           />
         </svg>
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          class="stroke-app-primary"
+        <button
+          onClick={() =>
+            setStatus(appState.status === "recording" ? "playing" : "recording")
+          }
         >
-          <circle cx="8.29028" cy="7.97217" r="6.75" stroke-width="1.5" />
-        </svg>
+          <svg
+            width="17"
+            height="17"
+            viewBox="0 0 17 17"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            class={`${
+              appState.status === "recording"
+                ? "fill-app-primary"
+                : "stroke-app-primary"
+            }`}
+          >
+            <circle cx="8.79028" cy="8.47217" r="7.25" stroke-width="1.5" />
+          </svg>
+        </button>
+
         <svg
           width="16"
           height="16"
