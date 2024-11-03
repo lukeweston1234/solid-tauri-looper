@@ -3,11 +3,14 @@ import { createSignal } from "solid-js";
 export default function Knob(props: {
   onValueChange: (newPercentage: number) => any;
   debounceTime: number | null;
+  initialValue: number;
 }) {
   let debounceTime = props.debounceTime || 200;
   const SPEED = 0.03;
 
-  const [percentage, setPercentage] = createSignal(0);
+  const [percentage, setPercentage] = createSignal(
+    Math.min(Math.max(props.initialValue, 0), 1)
+  );
   const [initalY, setInitialY] = createSignal<number | null>(null);
 
   let debounceTimeout: any;
@@ -64,7 +67,7 @@ export default function Knob(props: {
           transform="rotate(180, 25, 25)"
         />
       </svg>
-      <span class="absolute left-[27px] top-[18px] pointer-events-none">R</span>
+      <span class="absolute left-[27px] top-[20px] pointer-events-none">R</span>
     </div>
   );
 }

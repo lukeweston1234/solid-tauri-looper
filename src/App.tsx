@@ -2,7 +2,6 @@ import "./App.css";
 import { AppStateProvider } from "./core/app-state/app.context";
 import { Player } from "./features/player/player";
 import Header from "./shared/ui/header/header";
-import Knob from "./shared/ui/knob/knob";
 import Lighting from "./shared/ui/lighting/lighting";
 
 export default function App() {
@@ -12,7 +11,6 @@ export default function App() {
         <Lighting />
         <Header />
         <Player />
-        <Knob debounceTime={300} onValueChange={(x) => console.log(x)}></Knob>
       </div>
     </AppStateProvider>
   );

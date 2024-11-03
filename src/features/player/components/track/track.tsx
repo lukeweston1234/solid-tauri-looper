@@ -1,6 +1,7 @@
-import { createEffect, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 import { TrackItem } from "./track.model";
 import AudioVisualization from "../audio-visualization/audio-visualization";
+import Knob from "../../../../shared/ui/knob/knob";
 
 export function Track(props: TrackItem & { isLast: boolean }) {
   const [state, setState] = createSignal<TrackItem>({ ...props });
@@ -57,7 +58,11 @@ export function Track(props: TrackItem & { isLast: boolean }) {
             M
           </button>
         </div>
-        <button>test</button>
+        <Knob
+          initialValue={0.33}
+          debounceTime={200}
+          onValueChange={(x) => console.log(x)}
+        ></Knob>
       </div>
     </div>
   );
