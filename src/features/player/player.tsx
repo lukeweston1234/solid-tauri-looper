@@ -1,6 +1,7 @@
 import { For } from "solid-js";
 import { TrackItem } from "./components/track/track.model";
 import { Track } from "./components/track/track";
+import Clock from "./components/clock/clock";
 
 export function Player() {
   const testData: TrackItem[] = [
@@ -38,7 +39,8 @@ export function Player() {
     },
   ];
   return (
-    <div class="w-full h-full flex flex-col">
+    <div class="w-full h-full flex flex-col gap-6">
+      <Clock />
       <For each={testData}>
         {(child, i) => (
           <Track {...child} isLast={i() === testData.length - 1}></Track>
