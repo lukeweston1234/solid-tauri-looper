@@ -1,9 +1,9 @@
-use std::usize;
-
 use crate::audio::mixer::MixerNode;
 use crate::audio::track::TrackController;
 use crossbeam_channel::{bounded, Receiver, Sender};
 use fundsp::hacker32::*;
+use std::error::Error;
+use std::usize;
 
 #[derive(Clone, Copy)]
 pub enum AppControllerEnum {
@@ -16,6 +16,10 @@ pub enum AppControllerEnum {
     Exit,
     SetMixerGain(usize, f32),
     SetMixerReverbMix(usize, f32),
+    SetBPM(u32),
+    SetBeatsPerMeasure(u32),
+    SetBeatValue(u32),
+    SetBars(u32),
 }
 
 // This is gross, but I want to access nodes from an index,
@@ -88,6 +92,10 @@ impl AppController {
 }
 
 pub struct App {
+    bpm: u32,
+    bars: u32,
+    beat_value: u32,        // 4/(4), 3/(2)
+    beats_per_measure: u32, // (4)/4, (6)/8
     receiver: Receiver<AppControllerEnum>,
     state: AppControllerEnum,
     track_controllers: Vec<TrackController>,
@@ -100,6 +108,10 @@ impl App {
         track_controllers: Vec<TrackController>,
     ) -> Self {
         Self {
+            bpm: 120,
+            bars: 4,
+            beat_value: 4,
+            beats_per_measure: 4,
             receiver,
             state: AppControllerEnum::Stop,
             track_controllers,
@@ -144,6 +156,18 @@ impl App {
             track.only_input();
         }
     }
+    pub fn set_bpm(&mut self, bpm: u32) {
+        self.bpm = bpm;
+    }
+    pub fn set_beats_per_measure(&mut self, beats_per_measure: u32) {
+        self.beats_per_measure = beats_per_measure;
+    }
+    pub fn set_bars(&mut self, bars: u32) {
+        self.bars = bars;
+    }
+    pub fn set_beat_value(&mut self, beat_value: u32) {
+        self.beat_value = beat_value;
+    }
 }
 
 pub fn build_app(
@@ -176,6 +200,12 @@ pub fn run_app(mut app: App) {
                 }
                 AppControllerEnum::SetMixerReverbMix(track_index, mix) => {
                     app.set_mixer_reverb_mix(track_index, mix);
+                }
+                AppControllerEnum::SetBPM(bpm) => app.set_bpm(bpm),
+                AppControllerEnum::SetBars(bars) => app.set_bars(bars),
+                AppControllerEnum::SetBeatValue(beat_value) => app.set_beat_value(beat_value),
+                AppControllerEnum::SetBeatsPerMeasure(beats_per_measure) => {
+                    app.set_beats_per_measure(beats_per_measure)
                 }
                 AppControllerEnum::Loop => {}
                 AppControllerEnum::Exit => break,
