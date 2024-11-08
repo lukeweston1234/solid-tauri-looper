@@ -45,7 +45,7 @@ export function Player() {
         <Ticker />
       </div>
       <div class="flex flex-col gap-6 z-10">
-        <div class="w-[calc(100%-216px)]">
+        <div class="w-[calc(100%-218px)]">
           <Clock />
         </div>
         <div class="flex flex-col">

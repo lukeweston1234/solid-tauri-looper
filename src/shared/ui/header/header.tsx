@@ -28,6 +28,7 @@ export default function Header() {
           </defs>
         </svg>
         <div class="flex items-center gap-6">
+          {/* TODO */}
           <span class="text-sm">MEM 32%</span>
           <span class="text-sm">CPU 24%</span>
           <span class="text-sm">TEMP 54°C</span>
