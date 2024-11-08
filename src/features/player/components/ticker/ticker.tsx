@@ -1,4 +1,4 @@
-import { createSignal, onCleanup } from "solid-js";
+import { createSignal, onCleanup, Show } from "solid-js";
 import { useAppContext } from "../../../../core/app-state/app.context";
 
 export default function Ticker() {
@@ -17,10 +17,12 @@ export default function Ticker() {
 
   return (
     <div class="w-full h-full relative">
-      <div
-        style={{ left: `calc(${position()}% - 2px)` }}
-        class="h-full w-[1px] border-l-white border-l-[1px] border-white absolute"
-      ></div>
+      <Show when={state.status !== "stopped"}>
+        <div
+          style={{ left: `calc(${position()}% - 2px)` }}
+          class="h-full w-[1px] border-l-white border-l-[1px] border-white absolute"
+        ></div>
+      </Show>
     </div>
   );
 }
