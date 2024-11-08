@@ -39,3 +39,8 @@ pub fn record(app_controller: tauri::State<AppController>, track_index: usize) {
 pub fn track_only_feedback(app_controller: tauri::State<AppController>, track_index: usize) {
     app_controller.track_only_feedback(track_index);
 }
+
+#[command]
+pub fn start_looping(app_controller: tauri::State<AppController>){
+    app_controller.advance_looper();
+}

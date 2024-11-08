@@ -1,6 +1,7 @@
 import { JSXElement, createContext, useContext } from "solid-js";
 import { createStore } from "solid-js/store";
 import { AppContextType, AppState, AppStatus } from "./app.context.model";
+import { invoke } from "@tauri-apps/api/core";
 
 export const AppStateContext = createContext<AppContextType>();
 
@@ -39,7 +40,19 @@ export function AppStateProvider(props: { children: JSXElement }) {
     }));
   }
 
-  function setStatus(status: AppStatus) {
+  async function setStatus(status: AppStatus) {
+    if (status === 'playing'){
+      await invoke('play')
+    }
+    if (status === 'paused'){
+      await invoke('pause')
+    }
+    if (status === 'recording'){
+      await invoke('start_looping');
+    }
+    if (status === 'stopped'){
+      await invoke('stop')
+    }
     setState((prevState) => ({
       ...prevState,
       status: status,

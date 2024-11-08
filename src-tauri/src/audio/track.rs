@@ -45,6 +45,7 @@ where
     audio_sender: Sender<(T, T)>,
     input_receiver: Receiver<(T, T)>,
     controller_receiver: Receiver<TrackState>,
+    next_loop_sender: Sender<()>,
     state: TrackState,
     sampler: Sampler<T>,
     recording_clip: Option<Vec<T>>,
@@ -58,6 +59,7 @@ where
         audio_sender: Sender<(T, T)>,
         input_receiver: Receiver<(T, T)>,
         controller_receiver: Receiver<TrackState>,
+        next_loop_sender: Sender<()>,
         sampler: Sampler<T>,
         recording_clip: Option<Vec<T>>,
         initial_vec_size: usize,
@@ -66,6 +68,7 @@ where
             audio_sender,
             input_receiver,
             controller_receiver,
+            next_loop_sender,
             state: TrackState::Stopped,
             sampler: sampler,
             recording_clip: Some(Vec::with_capacity(initial_vec_size)),
@@ -101,6 +104,7 @@ where
         }
     }
     fn add_clip(&mut self) {
+        let _ = self.next_loop_sender.send(());
         let final_clip = self.recording_clip.take().unwrap();
         self.sampler
             .set_sample(AudioSample::new(final_clip, false, 44_100));
@@ -135,6 +139,8 @@ where
 
 pub fn build_track(
     input_receiver: Receiver<(f32, f32)>,
+    next_loop_sender: Sender<()>,
+
 ) -> (TrackController, Track<f32>, Receiver<(f32, f32)>) {
     let (track_state_sender, track_state_receiver) = unbounded::<TrackState>();
 
@@ -148,6 +154,7 @@ pub fn build_track(
         track_audio_sender,
         input_receiver,
         track_state_receiver,
+        next_loop_sender,
         sampler,
         None,
         705600, // 44100k, 60 bpm, 4 beats,

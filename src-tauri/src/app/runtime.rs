@@ -11,14 +11,16 @@ pub fn build_runtime() -> AppController {
     env::set_var("RUST_BACKTRACE", "full");
 
     // Sender / receiver for left and right channels (stereo mic).
-    let (sender, receiver) = bounded(4096);
+    let (audio_input_sender, audio_input_receiver) = bounded(4096);
 
-    let (track_one_controller, track_one, track_one_receiver) = build_track(receiver.clone());
-    let (track_two_controller, track_two, track_two_receiver) = build_track(receiver.clone());
-    let (track_three_controller, track_three, track_three_receiver) = build_track(receiver.clone());
-    let (track_four_controller, track_four, track_four_receiver) = build_track(receiver.clone());
-    let (track_five_controller, track_five, track_five_receiver) = build_track(receiver.clone());
-    let (track_six_controller, track_six, track_six_receiver) = build_track(receiver.clone());
+    let (next_looper_sender, next_looper_receiver) = bounded(10);
+
+    let (track_one_controller, track_one, track_one_receiver) = build_track(audio_input_receiver.clone(), next_looper_sender.clone());
+    let (track_two_controller, track_two, track_two_receiver) = build_track(audio_input_receiver.clone(), next_looper_sender.clone());
+    let (track_three_controller, track_three, track_three_receiver) = build_track(audio_input_receiver.clone(), next_looper_sender.clone());
+    let (track_four_controller, track_four, track_four_receiver) = build_track(audio_input_receiver.clone(), next_looper_sender.clone());
+    let (track_five_controller, track_five, track_five_receiver) = build_track(audio_input_receiver.clone(), next_looper_sender.clone());
+    let (track_six_controller, track_six, track_six_receiver) = build_track(audio_input_receiver.clone(), next_looper_sender.clone());
 
     let mixer_one = An(MixerNode::<1>::new(track_one_receiver));
     let mixer_two = An(MixerNode::<2>::new(track_two_receiver));
@@ -44,7 +46,7 @@ pub fn build_runtime() -> AppController {
         mixer_six.clone(),
     );
 
-    build_input_device(sender);
+    build_input_device(audio_input_sender);
 
     build_output_device(BlockRateAdapter::new(master_bus));
 
@@ -66,7 +68,7 @@ pub fn build_runtime() -> AppController {
         track_six_controller,
     ];
 
-    let (app_controller, app) = build_app(mixers, track_controllers);
+    let (app_controller, app) = build_app(mixers, track_controllers, next_looper_receiver);
 
     run_app(app);
 

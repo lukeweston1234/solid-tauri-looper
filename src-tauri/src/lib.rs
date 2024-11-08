@@ -24,6 +24,7 @@ pub fn run() {
             pause,
             stop,
             record,
+            start_looping,
             track_only_feedback,
             set_mixer_gain,
             set_mixer_reverb_mix,
