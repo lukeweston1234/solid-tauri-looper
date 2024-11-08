@@ -1,7 +1,14 @@
-# Tauri + Solid + Typescript
+# Looper Demo
 
-This template should help get you started developing with Tauri, Solid and Typescript in Vite.
+This is a Tauri application, which uses a SolidJS frontend, combined with a Rust backend.
 
-## Recommended IDE Setup
+### Development Setup
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+First, install the tauri CLI, you can then run with tauri dev, the release flag is needed for performance
+```
+cargo install tauri-cli 
+cargo tauri dev --release
+```
+
+
+
