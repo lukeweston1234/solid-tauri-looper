@@ -10,6 +10,7 @@ pub fn build_audio_graph(
     mixer_four: An<MixerNode<4>>,
     mixer_five: An<MixerNode<5>>,
     mixer_six: An<MixerNode<6>>,
+    mixer_feedback: An<MixerNode<7>>,
 ) -> Box<dyn AudioUnit> {
     let reverb = reverb2_stereo(20.0, 3.0, 1.0, 0.2, highshelf_hz(1000.0, 1.0, db_amp(-1.0)));
     let chorus = chorus(0, 0.0, 0.03, 0.2) | chorus(1, 0.0, 0.03, 0.2);
@@ -62,6 +63,14 @@ pub fn build_audio_graph(
             & ((1.0 - var(&mx_six_wet)) | (1.0 - var(&mx_six_wet))) * multipass())
         >> multipass() * (var(&mx_six_gain) | var(&mx_six_gain));
 
+    let mx_feedback_wet = mixer_feedback.get_reverb_mix();
+    let mx_feedback_gain = mixer_feedback.get_gain();
+
+    let mixer_feedback_processed = mixer_feedback
+        >> ((var(&mx_feedback_wet) | var(&mx_feedback_wet)) * (reverb.clone() >> chorus.clone())
+            & ((1.0 - var(&mx_feedback_wet)) | (1.0 - var(&mx_feedback_wet))) * multipass())
+        >> multipass() * (var(&mx_feedback_gain) | var(&mx_feedback_gain));
+
     let master_reverb = shared(0.6);
     let master_gain = shared(0.7);
 
@@ -70,7 +79,8 @@ pub fn build_audio_graph(
         + mixer_three_processed
         + mixer_four_processed
         + mixer_five_processed
-        + mixer_six_processed)
+        + mixer_six_processed
+        + mixer_feedback_processed)
         >> ((var(&master_reverb) | var(&master_reverb)) * (reverb.clone() >> chorus.clone())
             & ((1.0 - var(&master_reverb)) | (1.0 - var(&master_reverb))) * multipass())
         >> multipass() * (var(&master_gain) | var(&master_gain));

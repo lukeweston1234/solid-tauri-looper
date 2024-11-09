@@ -1,4 +1,5 @@
 use crate::audio::audio_graph::build_audio_graph;
+use crate::audio::mixer;
 use crate::audio::stream::{build_input_device, build_output_device};
 use crate::audio::{mixer::MixerNode, track::build_track, track::run_track};
 use crossbeam_channel::bounded;
@@ -56,6 +57,13 @@ pub fn build_runtime() -> (AppController, App) {
         visualizer_sender.clone(),
         VISUALIZER_CHUNK_SIZE,
     );
+    // Feedback only
+    let (feedback_track_controller, feedback_track, feedback_track_receiver) = build_track(
+        audio_input_receiver.clone(),
+        next_looper_sender.clone(),
+        visualizer_sender.clone(),
+        VISUALIZER_CHUNK_SIZE,
+    );
 
     let mixer_one = An(MixerNode::<1>::new(track_one_receiver));
     let mixer_two = An(MixerNode::<2>::new(track_two_receiver));
@@ -63,6 +71,7 @@ pub fn build_runtime() -> (AppController, App) {
     let mixer_four = An(MixerNode::<4>::new(track_four_receiver));
     let mixer_five = An(MixerNode::<5>::new(track_five_receiver));
     let mixer_six = An(MixerNode::<6>::new(track_six_receiver));
+    let mixer_feedback = An(MixerNode::<7>::new(feedback_track_receiver));
 
     run_track(track_one);
     run_track(track_two);
@@ -70,6 +79,7 @@ pub fn build_runtime() -> (AppController, App) {
     run_track(track_four);
     run_track(track_five);
     run_track(track_six);
+    run_track(feedback_track);
 
     let master_bus = build_audio_graph(
         mixer_one.clone(),
@@ -78,6 +88,7 @@ pub fn build_runtime() -> (AppController, App) {
         mixer_four.clone(),
         mixer_five.clone(),
         mixer_six.clone(),
+        mixer_feedback.clone(),
     );
 
     build_input_device(audio_input_sender);
@@ -91,6 +102,7 @@ pub fn build_runtime() -> (AppController, App) {
         MixerNodeEnum::MixerFour(mixer_four),
         MixerNodeEnum::MixerFive(mixer_five),
         MixerNodeEnum::MixerSix(mixer_six),
+        MixerNodeEnum::MixerFeedback(mixer_feedback),
     ];
 
     let track_controllers = vec![
@@ -100,6 +112,7 @@ pub fn build_runtime() -> (AppController, App) {
         track_four_controller,
         track_five_controller,
         track_six_controller,
+        feedback_track_controller,
     ];
 
     let (app_controller, app) = build_app(

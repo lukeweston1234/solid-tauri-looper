@@ -31,6 +31,7 @@ pub enum MixerNodeEnum {
     MixerFour(An<MixerNode<4>>),
     MixerFive(An<MixerNode<5>>),
     MixerSix(An<MixerNode<6>>),
+    MixerFeedback(An<MixerNode<7>>),
 }
 impl MixerNodeEnum {
     fn set_gain(&self, gain: f32) {
@@ -41,6 +42,7 @@ impl MixerNodeEnum {
             MixerNodeEnum::MixerFour(node) => node.set_gain(gain),
             MixerNodeEnum::MixerFive(node) => node.set_gain(gain),
             MixerNodeEnum::MixerSix(node) => node.set_gain(gain),
+            MixerNodeEnum::MixerFeedback(_) => (),
         }
     }
 
@@ -52,6 +54,7 @@ impl MixerNodeEnum {
             MixerNodeEnum::MixerFour(node) => node.set_reverb_mix(mix),
             MixerNodeEnum::MixerFive(node) => node.set_reverb_mix(mix),
             MixerNodeEnum::MixerSix(node) => node.set_reverb_mix(mix),
+            MixerNodeEnum::MixerFeedback(_) => (),
         }
     }
 }
@@ -127,7 +130,7 @@ impl App {
             beats_per_measure: 4,
             app_controller_receiver,
             active_recording_track_index: None,
-            track_size: mixers.len(),
+            track_size: 6, // 7th track is feedback only
             next_loop_receiver,
             audio_visualization_receiver,
             state: AppControllerEnum::Stop,
@@ -194,6 +197,8 @@ impl App {
                 self.active_recording_track_index = Some(track_index + 1);
                 self.record(track_index + 1);
                 let _ = app_handle.emit("track_added", self.active_recording_track_index);
+            } else {
+                self.track_only_feedback(track_index);
             }
         } else {
             self.active_recording_track_index = Some(0);
