@@ -189,12 +189,13 @@ impl App {
             if self.track_size > track_index {
                 self.active_recording_track_index = Some(track_index + 1);
                 self.record(track_index);
+                let _ = app_handle.emit("track_added", self.active_recording_track_index);
             }
         } else {
-            self.record(0);
             self.active_recording_track_index = Some(0);
+            self.record(0);
+            let _ = app_handle.emit("track_added", self.active_recording_track_index);
         }
-        let _ = app_handle.emit("track_added", self.active_recording_track_index);
     }
 }
 
