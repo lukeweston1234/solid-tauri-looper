@@ -41,6 +41,6 @@ pub fn track_only_feedback(app_controller: tauri::State<AppController>, track_in
 }
 
 #[command]
-pub fn start_looping(app_controller: tauri::State<AppController>){
+pub fn start_looping(app_controller: tauri::State<AppController>) {
     app_controller.advance_looper();
 }

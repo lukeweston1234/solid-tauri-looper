@@ -2,14 +2,15 @@ use crate::audio::mixer::MixerNode;
 use crate::audio::track::TrackController;
 use crossbeam_channel::{bounded, Receiver, Sender};
 use fundsp::hacker32::*;
-use std::usize;
+use std::{clone, usize};
+use tauri::{AppHandle, Emitter};
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub enum AppControllerEnum {
     Play,
     Pause,
     Stop,
-    AdvanceLooper,
+    AdvanceLooper, // change to reference
     Record(usize),
     TrackOnlyFeedback(usize),
     Exit,
@@ -88,8 +89,11 @@ impl AppController {
             .sender
             .send(AppControllerEnum::TrackOnlyFeedback(track_index));
     }
-    pub fn advance_looper(&self){
+    pub fn advance_looper(&self) {
         let _ = self.sender.send(AppControllerEnum::AdvanceLooper);
+    }
+    pub fn exit(&self) {
+        let _ = self.sender.send(AppControllerEnum::Exit);
     }
 }
 
@@ -108,7 +112,7 @@ pub struct App {
 }
 impl App {
     pub fn new(
-        app_controller_receiver: Receiver<AppControllerEnum>,           
+        app_controller_receiver: Receiver<AppControllerEnum>,
         next_loop_receiver: Receiver<()>,
         mixers: Vec<MixerNodeEnum>,
         track_controllers: Vec<TrackController>,
@@ -127,8 +131,8 @@ impl App {
             mixers,
         }
     }
-    pub fn set_app_state(&mut self, new_state: AppControllerEnum) {
-        self.state = new_state;
+    pub fn set_app_state(&mut self, new_state: &AppControllerEnum) {
+        self.state = new_state.clone();
     }
     pub fn play(&self) {
         for track_controller in self.track_controllers.iter() {
@@ -177,24 +181,24 @@ impl App {
     pub fn set_beat_value(&mut self, beat_value: u32) {
         self.beat_value = beat_value;
     }
-    pub fn advance_looping_track(&mut self){
+    pub fn advance_looping_track(&mut self, app_handle: &AppHandle) {
         if let Some(track_index) = self.active_recording_track_index {
-            if  self.track_size > track_index {
+            if self.track_size > track_index {
                 self.active_recording_track_index = Some(track_index + 1);
                 self.record(track_index);
             }
-        }
-        else {
+        } else {
             self.record(0);
             self.active_recording_track_index = Some(0);
         }
+        let _ = app_handle.emit("track_added", ());
     }
 }
 
 pub fn build_app(
     mixers: Vec<MixerNodeEnum>,
     track_controllers: Vec<TrackController>,
-    next_looper_receiver: Receiver<()>
+    next_looper_receiver: Receiver<()>,
 ) -> (AppController, App) {
     let (sender, receiver) = bounded(10);
 
@@ -205,11 +209,11 @@ pub fn build_app(
     (app_controller, app)
 }
 
-pub fn run_app(mut app: App) {
+pub fn run_app(mut app: App, app_handle: AppHandle) {
     std::thread::spawn(move || loop {
         // TODO, non blocking with a sleep seems better than a tight loop, but this needs to be refactored
         if let Ok(msg) = app.app_controller_receiver.try_recv() {
-            app.set_app_state(msg);
+            app.set_app_state(&msg);
             match msg {
                 AppControllerEnum::Play => app.play(),
                 AppControllerEnum::Pause => app.pause(),
@@ -230,17 +234,15 @@ pub fn run_app(mut app: App) {
                 AppControllerEnum::SetBeatsPerMeasure(beats_per_measure) => {
                     app.set_beats_per_measure(beats_per_measure)
                 }
-                AppControllerEnum::AdvanceLooper => app.advance_looping_track(),
+                AppControllerEnum::AdvanceLooper => app.advance_looping_track(&app_handle),
                 AppControllerEnum::Exit => break,
             }
         }
 
         if let Ok(()) = app.next_loop_receiver.try_recv() {
-            app.advance_looping_track();
+            app.advance_looping_track(&app_handle);
         }
 
-
         std::thread::sleep(std::time::Duration::from_millis(10));
-
     });
 }

@@ -1,20 +1,16 @@
+use tauri::Manager;
+
 use crate::api::api::*;
+use crate::app::app_controller::run_app;
 use crate::app::runtime::build_runtime;
 
 mod api;
 mod app;
 mod audio;
 
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let app_controller = build_runtime();
-
-    app_controller.track_only_feedback(0);
+    let (app_controller, runtime) = build_runtime();
 
     tauri::Builder::default()
         .manage(app_controller)
@@ -29,6 +25,13 @@ pub fn run() {
             set_mixer_gain,
             set_mixer_reverb_mix,
         ])
+        .setup(|app| {
+            let app_handle = app.app_handle();
+
+            run_app(runtime, app_handle.clone());
+
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

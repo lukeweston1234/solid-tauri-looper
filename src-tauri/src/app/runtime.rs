@@ -4,10 +4,11 @@ use crate::audio::{mixer::MixerNode, track::build_track, track::run_track};
 use crossbeam_channel::bounded;
 use fundsp::hacker32::*;
 use std::env;
+use tauri::AppHandle;
 
-use super::app_controller::{build_app, run_app, AppController, MixerNodeEnum};
+use super::app_controller::{build_app, App, AppController, MixerNodeEnum};
 
-pub fn build_runtime() -> AppController {
+pub fn build_runtime() -> (AppController, App) {
     env::set_var("RUST_BACKTRACE", "full");
 
     // Sender / receiver for left and right channels (stereo mic).
@@ -15,12 +16,18 @@ pub fn build_runtime() -> AppController {
 
     let (next_looper_sender, next_looper_receiver) = bounded(10);
 
-    let (track_one_controller, track_one, track_one_receiver) = build_track(audio_input_receiver.clone(), next_looper_sender.clone());
-    let (track_two_controller, track_two, track_two_receiver) = build_track(audio_input_receiver.clone(), next_looper_sender.clone());
-    let (track_three_controller, track_three, track_three_receiver) = build_track(audio_input_receiver.clone(), next_looper_sender.clone());
-    let (track_four_controller, track_four, track_four_receiver) = build_track(audio_input_receiver.clone(), next_looper_sender.clone());
-    let (track_five_controller, track_five, track_five_receiver) = build_track(audio_input_receiver.clone(), next_looper_sender.clone());
-    let (track_six_controller, track_six, track_six_receiver) = build_track(audio_input_receiver.clone(), next_looper_sender.clone());
+    let (track_one_controller, track_one, track_one_receiver) =
+        build_track(audio_input_receiver.clone(), next_looper_sender.clone());
+    let (track_two_controller, track_two, track_two_receiver) =
+        build_track(audio_input_receiver.clone(), next_looper_sender.clone());
+    let (track_three_controller, track_three, track_three_receiver) =
+        build_track(audio_input_receiver.clone(), next_looper_sender.clone());
+    let (track_four_controller, track_four, track_four_receiver) =
+        build_track(audio_input_receiver.clone(), next_looper_sender.clone());
+    let (track_five_controller, track_five, track_five_receiver) =
+        build_track(audio_input_receiver.clone(), next_looper_sender.clone());
+    let (track_six_controller, track_six, track_six_receiver) =
+        build_track(audio_input_receiver.clone(), next_looper_sender.clone());
 
     let mixer_one = An(MixerNode::<1>::new(track_one_receiver));
     let mixer_two = An(MixerNode::<2>::new(track_two_receiver));
@@ -70,7 +77,5 @@ pub fn build_runtime() -> AppController {
 
     let (app_controller, app) = build_app(mixers, track_controllers, next_looper_receiver);
 
-    run_app(app);
-
-    app_controller
+    (app_controller, app)
 }

@@ -1,7 +1,8 @@
-import { JSXElement, createContext, useContext } from "solid-js";
+import { JSXElement, createContext, onCleanup, useContext } from "solid-js";
 import { createStore } from "solid-js/store";
 import { AppContextType, AppState, AppStatus } from "./app.context.model";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 
 export const AppStateContext = createContext<AppContextType>();
 
@@ -16,6 +17,14 @@ export function AppStateProvider(props: { children: JSXElement }) {
       beatValue: 4,
       beatsPerMeasure: 4,
     },
+  });
+
+  const listener = listen("track_added", (event) => {
+    console.log(event);
+  });
+
+  onCleanup(() => {
+    listener.then((unlisten) => unlisten());
   });
 
   function setTimeInformation(
@@ -41,17 +50,17 @@ export function AppStateProvider(props: { children: JSXElement }) {
   }
 
   async function setStatus(status: AppStatus) {
-    if (status === 'playing'){
-      await invoke('play')
+    if (status === "playing") {
+      await invoke("play");
     }
-    if (status === 'paused'){
-      await invoke('pause')
+    if (status === "paused") {
+      await invoke("pause");
     }
-    if (status === 'recording'){
-      await invoke('start_looping');
+    if (status === "recording") {
+      await invoke("start_looping");
     }
-    if (status === 'stopped'){
-      await invoke('stop')
+    if (status === "stopped") {
+      await invoke("stop");
     }
     setState((prevState) => ({
       ...prevState,

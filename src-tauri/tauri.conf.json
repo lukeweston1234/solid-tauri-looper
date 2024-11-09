@@ -13,8 +13,9 @@
     "windows": [
       {
         "title": "solid-tauri-looper",
-        "width": 800,
-        "height": 600
+        "width": 1133,
+        "height": 744,
+        "transparent": true
       }
     ],
     "security": {

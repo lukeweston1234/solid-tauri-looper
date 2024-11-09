@@ -19,22 +19,22 @@ impl TrackController {
         Self { sender }
     }
     pub fn play(&self) {
-        self.sender.send(TrackState::Playing);
+        let _ = self.sender.send(TrackState::Playing);
     }
     pub fn pause(&self) {
-        self.sender.send(TrackState::Paused);
+        let _ = self.sender.send(TrackState::Paused);
     }
     pub fn stop(&self) {
-        self.sender.send(TrackState::Stopped);
+        let _ = self.sender.send(TrackState::Stopped);
     }
     pub fn record(&self) {
-        self.sender.send(TrackState::Recording);
+        let _ = self.sender.send(TrackState::Recording);
     }
     pub fn only_input(&self) {
-        self.sender.send(TrackState::OnlyInput);
+        let _ = self.sender.send(TrackState::OnlyInput);
     }
     pub fn end(&self) {
-        self.sender.send(TrackState::End);
+        let _ = self.sender.send(TrackState::End);
     }
 }
 
@@ -140,7 +140,6 @@ where
 pub fn build_track(
     input_receiver: Receiver<(f32, f32)>,
     next_loop_sender: Sender<()>,
-
 ) -> (TrackController, Track<f32>, Receiver<(f32, f32)>) {
     let (track_state_sender, track_state_receiver) = unbounded::<TrackState>();
 
