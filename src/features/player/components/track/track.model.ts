@@ -4,5 +4,5 @@ export interface TrackItem {
   isSoloed: boolean;
   isMuted: boolean;
   reverbWet: number;
-  displayBuffer: number[];
+  displayBuffer: { position: number; buffer: number[] };
 }

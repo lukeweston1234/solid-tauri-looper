@@ -11,23 +11,51 @@ use super::app_controller::{build_app, App, AppController, MixerNodeEnum};
 pub fn build_runtime() -> (AppController, App) {
     env::set_var("RUST_BACKTRACE", "full");
 
+    const VISUALIZER_CHUNK_SIZE: usize = 128;
+
     // Sender / receiver for left and right channels (stereo mic).
     let (audio_input_sender, audio_input_receiver) = bounded(4096);
 
     let (next_looper_sender, next_looper_receiver) = bounded(10);
 
-    let (track_one_controller, track_one, track_one_receiver) =
-        build_track(audio_input_receiver.clone(), next_looper_sender.clone());
-    let (track_two_controller, track_two, track_two_receiver) =
-        build_track(audio_input_receiver.clone(), next_looper_sender.clone());
-    let (track_three_controller, track_three, track_three_receiver) =
-        build_track(audio_input_receiver.clone(), next_looper_sender.clone());
-    let (track_four_controller, track_four, track_four_receiver) =
-        build_track(audio_input_receiver.clone(), next_looper_sender.clone());
-    let (track_five_controller, track_five, track_five_receiver) =
-        build_track(audio_input_receiver.clone(), next_looper_sender.clone());
-    let (track_six_controller, track_six, track_six_receiver) =
-        build_track(audio_input_receiver.clone(), next_looper_sender.clone());
+    let (visualizer_sender, visualizer_receiver) = bounded(256);
+
+    let (track_one_controller, track_one, track_one_receiver) = build_track(
+        audio_input_receiver.clone(),
+        next_looper_sender.clone(),
+        visualizer_sender.clone(),
+        VISUALIZER_CHUNK_SIZE,
+    );
+    let (track_two_controller, track_two, track_two_receiver) = build_track(
+        audio_input_receiver.clone(),
+        next_looper_sender.clone(),
+        visualizer_sender.clone(),
+        VISUALIZER_CHUNK_SIZE,
+    );
+    let (track_three_controller, track_three, track_three_receiver) = build_track(
+        audio_input_receiver.clone(),
+        next_looper_sender.clone(),
+        visualizer_sender.clone(),
+        VISUALIZER_CHUNK_SIZE,
+    );
+    let (track_four_controller, track_four, track_four_receiver) = build_track(
+        audio_input_receiver.clone(),
+        next_looper_sender.clone(),
+        visualizer_sender.clone(),
+        VISUALIZER_CHUNK_SIZE,
+    );
+    let (track_five_controller, track_five, track_five_receiver) = build_track(
+        audio_input_receiver.clone(),
+        next_looper_sender.clone(),
+        visualizer_sender.clone(),
+        VISUALIZER_CHUNK_SIZE,
+    );
+    let (track_six_controller, track_six, track_six_receiver) = build_track(
+        audio_input_receiver.clone(),
+        next_looper_sender.clone(),
+        visualizer_sender.clone(),
+        VISUALIZER_CHUNK_SIZE,
+    );
 
     let mixer_one = An(MixerNode::<1>::new(track_one_receiver));
     let mixer_two = An(MixerNode::<2>::new(track_two_receiver));
@@ -75,7 +103,12 @@ pub fn build_runtime() -> (AppController, App) {
         track_six_controller,
     ];
 
-    let (app_controller, app) = build_app(mixers, track_controllers, next_looper_receiver);
+    let (app_controller, app) = build_app(
+        mixers,
+        track_controllers,
+        next_looper_receiver,
+        visualizer_receiver,
+    );
 
     (app_controller, app)
 }

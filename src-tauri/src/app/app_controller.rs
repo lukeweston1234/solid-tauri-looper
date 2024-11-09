@@ -106,6 +106,7 @@ pub struct App {
     active_recording_track_index: Option<usize>,
     track_size: usize,
     next_loop_receiver: Receiver<()>,
+    audio_visualization_receiver: Receiver<f32>,
     state: AppControllerEnum,
     track_controllers: Vec<TrackController>,
     mixers: Vec<MixerNodeEnum>,
@@ -114,6 +115,7 @@ impl App {
     pub fn new(
         app_controller_receiver: Receiver<AppControllerEnum>,
         next_loop_receiver: Receiver<()>,
+        audio_visualization_receiver: Receiver<f32>,
         mixers: Vec<MixerNodeEnum>,
         track_controllers: Vec<TrackController>,
     ) -> Self {
@@ -126,6 +128,7 @@ impl App {
             active_recording_track_index: None,
             track_size: mixers.len(),
             next_loop_receiver,
+            audio_visualization_receiver,
             state: AppControllerEnum::Stop,
             track_controllers,
             mixers,
@@ -191,7 +194,7 @@ impl App {
             self.record(0);
             self.active_recording_track_index = Some(0);
         }
-        let _ = app_handle.emit("track_added", ());
+        let _ = app_handle.emit("track_added", self.active_recording_track_index);
     }
 }
 
@@ -199,12 +202,19 @@ pub fn build_app(
     mixers: Vec<MixerNodeEnum>,
     track_controllers: Vec<TrackController>,
     next_looper_receiver: Receiver<()>,
+    audio_visualization_receiver: Receiver<f32>,
 ) -> (AppController, App) {
     let (sender, receiver) = bounded(10);
 
     let app_controller = AppController::new(sender);
 
-    let app = App::new(receiver, next_looper_receiver, mixers, track_controllers);
+    let app = App::new(
+        receiver,
+        next_looper_receiver,
+        audio_visualization_receiver,
+        mixers,
+        track_controllers,
+    );
 
     (app_controller, app)
 }
@@ -241,6 +251,10 @@ pub fn run_app(mut app: App, app_handle: AppHandle) {
 
         if let Ok(()) = app.next_loop_receiver.try_recv() {
             app.advance_looping_track(&app_handle);
+        }
+
+        if let Ok(sample) = app.audio_visualization_receiver.try_recv() {
+            let _ = app_handle.emit("visualizer_sample", sample);
         }
 
         std::thread::sleep(std::time::Duration::from_millis(10));

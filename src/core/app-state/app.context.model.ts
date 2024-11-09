@@ -1,3 +1,5 @@
+import { TrackItem } from "../../features/player/components/track/track.model";
+
 export interface TimeInformation {
   bars: number;
   beatsPerMeasure: number; // 6 in 6/8
@@ -22,9 +24,12 @@ export type AppContextType = readonly [
 ];
 
 export interface AppState {
+  recordingTrackIndex: number | null;
   bpm: number;
   masterVolume: number;
   status: AppStatus;
   timeInformation: TimeInformation;
   isMetronomeOn: boolean;
+  tracks: TrackItem[];
+  maxTracks: number;
 }

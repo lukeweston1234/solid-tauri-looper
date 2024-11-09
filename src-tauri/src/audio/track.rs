@@ -40,39 +40,47 @@ impl TrackController {
 
 pub struct Track<T>
 where
-    T: Send + Copy,
+    T: Send + Copy + Into<f32>,
 {
     audio_sender: Sender<(T, T)>,
     input_receiver: Receiver<(T, T)>,
     controller_receiver: Receiver<TrackState>,
     next_loop_sender: Sender<()>,
+    audio_display_sender: Sender<f32>, // Send the average size of a buffer
     state: TrackState,
     sampler: Sampler<T>,
     recording_clip: Option<Vec<T>>,
-    initial_vec_size: usize, // We will potentially use this again when recording
+    initial_vec_size: usize, // We will potentially use this again when recording,
+    display_vec_chunk_size: usize,
+    display_average_buffer: Vec<T>,
 }
 impl<T> Track<T>
 where
-    T: Send + Copy,
+    T: Send + Copy + Into<f32>,
 {
     pub fn new(
         audio_sender: Sender<(T, T)>,
         input_receiver: Receiver<(T, T)>,
         controller_receiver: Receiver<TrackState>,
         next_loop_sender: Sender<()>,
+        audio_display_sender: Sender<f32>,
         sampler: Sampler<T>,
         recording_clip: Option<Vec<T>>,
         initial_vec_size: usize,
+        display_vec_size: usize,
     ) -> Self {
         Self {
             audio_sender,
             input_receiver,
             controller_receiver,
             next_loop_sender,
+            audio_display_sender,
             state: TrackState::Stopped,
             sampler: sampler,
             recording_clip: Some(Vec::with_capacity(initial_vec_size)),
             initial_vec_size,
+            display_vec_chunk_size: display_vec_size,
+            display_average_buffer: Vec::with_capacity(initial_vec_size / display_vec_size),
         }
     }
     pub fn handle_controller_messages(&mut self) {
@@ -91,17 +99,34 @@ where
                 return; // Don't worry about recording if we are in an input only loop
             }
 
-            let clip = self
-                .recording_clip
-                .get_or_insert_with(|| Vec::with_capacity(self.initial_vec_size));
+            {
+                let clip = self
+                    .recording_clip
+                    .get_or_insert_with(|| Vec::with_capacity(self.initial_vec_size));
 
-            clip.push(sample.0);
-            clip.push(sample.1);
+                clip.push(sample.0);
+                clip.push(sample.1);
 
-            if clip.len() >= self.initial_vec_size {
-                self.add_clip();
+                if clip.len() >= self.initial_vec_size {
+                    self.add_clip();
+                }
             }
+
+            self.handle_display_vec(sample);
         }
+    }
+    fn handle_display_vec(&mut self, sample: (T, T)) {
+        if self.display_average_buffer.len() >= self.initial_vec_size / self.display_vec_chunk_size
+        {
+            let sum: f32 = self.display_average_buffer.iter().map(|&x| x.into()).sum();
+
+            let average = sum / self.display_average_buffer.len() as f32;
+
+            let _ = self.audio_display_sender.send(average);
+            self.display_average_buffer.clear();
+        }
+        self.display_average_buffer.push(sample.0);
+        self.display_average_buffer.push(sample.1);
     }
     fn add_clip(&mut self) {
         let _ = self.next_loop_sender.send(());
@@ -123,7 +148,7 @@ where
 
 pub fn run_track<T>(mut track: Track<T>)
 where
-    T: Send + Copy + 'static,
+    T: Send + Copy + Into<f32> + 'static,
 {
     std::thread::spawn(move || loop {
         track.handle_controller_messages();
@@ -140,6 +165,8 @@ where
 pub fn build_track(
     input_receiver: Receiver<(f32, f32)>,
     next_loop_sender: Sender<()>,
+    audio_display_sender: Sender<f32>,
+    display_vec_chunk_size: usize,
 ) -> (TrackController, Track<f32>, Receiver<(f32, f32)>) {
     let (track_state_sender, track_state_receiver) = unbounded::<TrackState>();
 
@@ -154,9 +181,11 @@ pub fn build_track(
         input_receiver,
         track_state_receiver,
         next_loop_sender,
+        audio_display_sender,
         sampler,
         None,
-        705600, // 44100k, 60 bpm, 4 beats,
+        352800, // 44100k, 60 bpm, 4 beats, 2 bars
+        display_vec_chunk_size,
     );
 
     (track_controller, track, track_audio_receiver)

@@ -3,28 +3,95 @@ import { createStore } from "solid-js/store";
 import { AppContextType, AppState, AppStatus } from "./app.context.model";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { TrackItem } from "../../features/player/components/track/track.model";
 
 export const AppStateContext = createContext<AppContextType>();
 
+const VISUALIZER_CHUNK_SIZE = 128;
+
 export function AppStateProvider(props: { children: JSXElement }) {
   const [state, setState] = createStore<AppState>({
+    recordingTrackIndex: 0,
     bpm: 120,
     masterVolume: 1,
     status: "stopped",
     isMetronomeOn: false,
+    maxTracks: 6,
     timeInformation: {
       bars: 2,
       beatValue: 4,
       beatsPerMeasure: 4,
     },
+    tracks: [
+      {
+        index: 0,
+        displayBuffer: {
+          position: 0,
+          buffer: Array(VISUALIZER_CHUNK_SIZE).fill(0),
+        },
+        reverbWet: 0,
+        isMuted: false,
+        isSoloed: false,
+        volume: 1,
+      },
+    ],
   });
 
-  const listener = listen("track_added", (event) => {
-    console.log(event);
+  const trackAddedListener = listen("track_added", (event) => {
+    console.log(event.payload);
+    const recordingIndex = event.payload as number;
+    if (recordingIndex >= state.maxTracks) return;
+    const tracks: TrackItem[] = [
+      ...state.tracks,
+      {
+        index: recordingIndex,
+        displayBuffer: {
+          position: 0,
+          buffer: Array(VISUALIZER_CHUNK_SIZE).fill(0),
+        },
+        reverbWet: 0,
+        isMuted: false,
+        isSoloed: false,
+        volume: 1,
+      },
+    ];
+    setState((prevState) => ({
+      ...prevState,
+      recordingTrackIndex: recordingIndex,
+      tracks: tracks,
+    }));
+  });
+
+  const visualizerSampleListener = listen("visualizer_sample", (event) => {
+    const displaySample = event.payload as number;
+
+    let recordingIndex = state.recordingTrackIndex;
+    if (recordingIndex === null) throw new Error("No recording track index!");
+
+    setState((prevState) => {
+      const tracks = [...prevState.tracks];
+      const updatedTrack = { ...tracks[recordingIndex] };
+
+      const newPosition =
+        (updatedTrack.displayBuffer.position + 1) % VISUALIZER_CHUNK_SIZE;
+
+      const newBuffer = [...updatedTrack.displayBuffer.buffer];
+      newBuffer[updatedTrack.displayBuffer.position] = displaySample;
+
+      updatedTrack.displayBuffer = {
+        position: newPosition,
+        buffer: newBuffer,
+      };
+
+      tracks[recordingIndex] = updatedTrack;
+
+      return { ...prevState, tracks };
+    });
   });
 
   onCleanup(() => {
-    listener.then((unlisten) => unlisten());
+    trackAddedListener.then((unlisten) => unlisten());
+    visualizerSampleListener.then((unlisten) => unlisten());
   });
 
   function setTimeInformation(
