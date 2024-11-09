@@ -63,7 +63,6 @@ pub fn build_runtime() -> (AppController, App) {
     let mixer_four = An(MixerNode::<4>::new(track_four_receiver));
     let mixer_five = An(MixerNode::<5>::new(track_five_receiver));
     let mixer_six = An(MixerNode::<6>::new(track_six_receiver));
-    // let master_bus = BusNode::new(mixer_one, mixer_two, mixer_three, mixer_four);
 
     run_track(track_one);
     run_track(track_two);

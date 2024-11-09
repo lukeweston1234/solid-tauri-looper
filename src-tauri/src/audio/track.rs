@@ -2,12 +2,13 @@ use super::{audio_sample::AudioSample, playable::Playable, sampler::Sampler};
 use crossbeam_channel::{bounded, unbounded, Receiver, Sender};
 
 #[derive(PartialEq)]
-enum TrackState {
+pub enum TrackState {
     Playing,
     Paused,
     OnlyInput,
     Stopped,
     Recording,
+    ClearSample,
     End,
 }
 
@@ -29,6 +30,9 @@ impl TrackController {
     }
     pub fn record(&self) {
         let _ = self.sender.send(TrackState::Recording);
+    }
+    pub fn clear_sample(&self) {
+        let _ = self.sender.send(TrackState::ClearSample);
     }
     pub fn only_input(&self) {
         let _ = self.sender.send(TrackState::OnlyInput);
@@ -88,7 +92,12 @@ where
             if new_state == TrackState::Stopped {
                 self.sampler.reset_position();
             }
-            self.state = new_state;
+            if (new_state) == TrackState::ClearSample {
+                self.sampler.clear_sample();
+                self.state = TrackState::Stopped;
+            } else {
+                self.state = new_state;
+            }
         }
     }
     fn handle_recording(&mut self) {
@@ -144,6 +153,9 @@ where
             let _ = self.audio_sender.send(sample);
         }
     }
+    fn clear_sample(&mut self) {
+        self.sampler.clear_sample();
+    }
 }
 
 pub fn run_track<T>(mut track: Track<T>)
@@ -157,6 +169,7 @@ where
             TrackState::Recording | TrackState::OnlyInput => track.handle_recording(),
             TrackState::Playing => track.handle_playback(),
             TrackState::Paused | TrackState::Stopped => {}
+            TrackState::ClearSample => (),
             TrackState::End => break,
         }
     });

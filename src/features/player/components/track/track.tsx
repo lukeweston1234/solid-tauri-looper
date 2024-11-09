@@ -1,12 +1,8 @@
 import { TrackItem } from "./track.model";
 import AudioVisualization from "../audio-visualization/audio-visualization";
 import Knob from "../../../../shared/ui/knob/knob";
-import { effect } from "solid-js/web";
 
 export function Track(props: TrackItem & { isLast: boolean }) {
-  effect(() => {
-    console.log(props);
-  });
   return (
     <div class="w-full h-32 flex gap-6 items-center flex-shrink-0">
       <div

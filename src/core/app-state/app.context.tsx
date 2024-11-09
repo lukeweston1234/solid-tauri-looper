@@ -26,7 +26,6 @@ export function AppStateProvider(props: { children: JSXElement }) {
   });
 
   const trackAddedListener = listen("track_added", (event) => {
-    console.log(event.payload);
     const recordingIndex = event.payload as number;
     if (recordingIndex - 1 > state.maxTracks) return;
     const tracks: TrackItem[] = [
@@ -61,7 +60,7 @@ export function AppStateProvider(props: { children: JSXElement }) {
       const updatedTrack = { ...tracks[recordingIndex] };
 
       const newPosition =
-        (updatedTrack.displayBuffer.position + 1) % VISUALIZER_CHUNK_SIZE;
+        (updatedTrack.displayBuffer.position + 1) % VISUALIZER_CHUNK_SIZE; // just in case
 
       const newBuffer = [...updatedTrack.displayBuffer.buffer];
       newBuffer[updatedTrack.displayBuffer.position] = displaySample;
@@ -105,6 +104,7 @@ export function AppStateProvider(props: { children: JSXElement }) {
   }
 
   async function setStatus(status: AppStatus) {
+    console.log(status);
     if (status === "playing") {
       await invoke("play");
     }

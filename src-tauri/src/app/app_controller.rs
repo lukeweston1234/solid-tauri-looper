@@ -90,6 +90,7 @@ impl AppController {
             .send(AppControllerEnum::TrackOnlyFeedback(track_index));
     }
     pub fn advance_looper(&self) {
+        println!("Advance looper!");
         let _ = self.sender.send(AppControllerEnum::AdvanceLooper);
     }
     pub fn exit(&self) {
@@ -155,6 +156,8 @@ impl App {
     pub fn record(&self, track_index: usize) {
         if let Some(track) = self.track_controllers.get(track_index) {
             track.record();
+        } else {
+            println!("Could not find track at index {}", track_index);
         }
     }
     pub fn set_mixer_gain(&self, track_index: usize, gain: f32) {
@@ -186,9 +189,10 @@ impl App {
     }
     pub fn advance_looping_track(&mut self, app_handle: &AppHandle) {
         if let Some(track_index) = self.active_recording_track_index {
+            println!("{:?}", track_index);
             if self.track_size > track_index {
                 self.active_recording_track_index = Some(track_index + 1);
-                self.record(track_index);
+                self.record(track_index + 1);
                 let _ = app_handle.emit("track_added", self.active_recording_track_index);
             }
         } else {
