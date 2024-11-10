@@ -1,4 +1,7 @@
-use super::mixer::MixerNode;
+use super::{
+    metronome::{self, Metronome},
+    mixer::MixerNode,
+};
 use fundsp::hacker32::*;
 
 // TODO, Figure out how to make these at runtime in FunDSP

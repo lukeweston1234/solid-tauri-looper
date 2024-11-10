@@ -1,7 +1,9 @@
 use crate::audio::audio_graph::build_audio_graph;
-use crate::audio::mixer;
+use crate::audio::metronome::{build_metronome, run_metronome};
 use crate::audio::stream::{build_input_device, build_output_device};
+use crate::audio::{metronome, mixer};
 use crate::audio::{mixer::MixerNode, track::build_track, track::run_track};
+use crate::start_metronome;
 use crossbeam_channel::bounded;
 use fundsp::hacker32::*;
 use std::env;
@@ -91,9 +93,13 @@ pub fn build_runtime() -> (AppController, App) {
         mixer_feedback.clone(),
     );
 
+    let (metronome_controller, metronome, metronome_buffer_receiver) = build_metronome(60);
+
+    run_metronome(metronome);
+
     build_input_device(audio_input_sender);
 
-    build_output_device(BlockRateAdapter::new(master_bus));
+    build_output_device(BlockRateAdapter::new(master_bus), metronome_buffer_receiver);
 
     let mixers: Vec<MixerNodeEnum> = vec![
         MixerNodeEnum::MixerOne(mixer_one),
@@ -120,6 +126,7 @@ pub fn build_runtime() -> (AppController, App) {
         track_controllers,
         next_looper_receiver,
         visualizer_receiver,
+        metronome_controller,
     );
 
     (app_controller, app)

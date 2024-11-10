@@ -1,7 +1,8 @@
-use crate::audio::mixer::MixerNode;
 use crate::audio::track::TrackController;
+use crate::audio::{metronome::MetronomeController, mixer::MixerNode};
 use crossbeam_channel::{bounded, Receiver, Sender};
 use fundsp::hacker32::*;
+use std::sync::Arc;
 use std::{clone, usize};
 use tauri::{AppHandle, Emitter};
 
@@ -20,6 +21,8 @@ pub enum AppControllerEnum {
     SetBeatsPerMeasure(u32),
     SetBeatValue(u32),
     SetBars(u32),
+    StartMetronome,
+    StopMetronome,
 }
 
 // This is gross, but I want to access nodes from an index,
@@ -99,6 +102,12 @@ impl AppController {
     pub fn exit(&self) {
         let _ = self.sender.send(AppControllerEnum::Exit);
     }
+    pub fn start_metronome(&self) {
+        let _ = self.sender.send(AppControllerEnum::StartMetronome);
+    }
+    pub fn stop_metronome(&self) {
+        let _ = self.sender.send(AppControllerEnum::StartMetronome);
+    }
 }
 
 pub struct App {
@@ -114,6 +123,7 @@ pub struct App {
     state: AppControllerEnum,
     track_controllers: Vec<TrackController>,
     mixers: Vec<MixerNodeEnum>,
+    metronome_controller: Arc<MetronomeController>,
 }
 impl App {
     pub fn new(
@@ -122,6 +132,7 @@ impl App {
         audio_visualization_receiver: Receiver<f32>,
         mixers: Vec<MixerNodeEnum>,
         track_controllers: Vec<TrackController>,
+        metronome_controller: Arc<MetronomeController>,
     ) -> Self {
         Self {
             bpm: 120,
@@ -136,6 +147,7 @@ impl App {
             state: AppControllerEnum::Stop,
             track_controllers,
             mixers,
+            metronome_controller: metronome_controller,
         }
     }
     pub fn set_app_state(&mut self, new_state: &AppControllerEnum) {
@@ -206,6 +218,12 @@ impl App {
             let _ = app_handle.emit("track_added", self.active_recording_track_index);
         }
     }
+    pub fn start_metronome(&self) {
+        self.metronome_controller.start();
+    }
+    pub fn stop_metronome(&self) {
+        self.metronome_controller.stop();
+    }
 }
 
 pub fn build_app(
@@ -213,6 +231,7 @@ pub fn build_app(
     track_controllers: Vec<TrackController>,
     next_looper_receiver: Receiver<()>,
     audio_visualization_receiver: Receiver<f32>,
+    metronome_controller: Arc<MetronomeController>,
 ) -> (AppController, App) {
     let (sender, receiver) = bounded(10);
 
@@ -224,6 +243,7 @@ pub fn build_app(
         audio_visualization_receiver,
         mixers,
         track_controllers,
+        metronome_controller,
     );
 
     (app_controller, app)
@@ -255,6 +275,8 @@ pub fn run_app(mut app: App, app_handle: AppHandle) {
                     app.set_beats_per_measure(beats_per_measure)
                 }
                 AppControllerEnum::AdvanceLooper => app.advance_looping_track(&app_handle),
+                AppControllerEnum::StartMetronome => app.start_metronome(),
+                AppControllerEnum::StopMetronome => app.stop_metronome(),
                 AppControllerEnum::Exit => break,
             }
         }

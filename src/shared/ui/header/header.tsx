@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api/core";
 import { useAppContext } from "../../../core/app-state/app.context";
 import { createEffect, Show } from "solid-js";
 
@@ -128,7 +129,12 @@ export default function Header() {
           </svg>
         </button>
       </div>
-      <div class="flex gap-[72px] items-center justify-end">
+      <div
+        onClick={async () => {
+          await invoke("start_metronome");
+        }}
+        class="flex gap-[72px] items-center justify-end cursor-pointer"
+      >
         <input
           id="default-range"
           type="range"

@@ -4,21 +4,48 @@ use fundsp::hacker32::*;
 
 use crossbeam_channel::{Receiver, Sender};
 
-pub fn build_output_device(master_bus: BlockRateAdapter) {
+use crate::audio::metronome;
+use crate::audio::playable::Playable;
+
+use super::metronome::Metronome;
+
+pub fn build_output_device(
+    master_bus: BlockRateAdapter,
+    metronome_buffer_receiver: Receiver<(f32, f32)>,
+) {
     let host = cpal::default_host();
 
     // Start output.
-    let out_device = host.default_output_device().expect("Could not get default output device!");
-    let out_config = out_device.default_output_config().expect("Could not get default output config!");
+    let out_device = host
+        .default_output_device()
+        .expect("Could not get default output device!");
+    let out_config = out_device
+        .default_output_config()
+        .expect("Could not get default output config!");
 
     println!("Out channels: {:?}", out_config.channels());
     println!("Out sample rate: {:?}", out_config.sample_rate());
     println!("Out sample format: {:?}", out_config.sample_format());
 
     match out_config.sample_format() {
-        cpal::SampleFormat::F32 => run_out::<f32>(&out_device, &out_config.into(), master_bus),
-        cpal::SampleFormat::I16 => run_out::<i16>(&out_device, &out_config.into(), master_bus),
-        cpal::SampleFormat::U16 => run_out::<u16>(&out_device, &out_config.into(), master_bus),
+        cpal::SampleFormat::F32 => run_out::<f32>(
+            &out_device,
+            &out_config.into(),
+            master_bus,
+            metronome_buffer_receiver,
+        ),
+        cpal::SampleFormat::I16 => run_out::<i16>(
+            &out_device,
+            &out_config.into(),
+            master_bus,
+            metronome_buffer_receiver,
+        ),
+        cpal::SampleFormat::U16 => run_out::<u16>(
+            &out_device,
+            &out_config.into(),
+            master_bus,
+            metronome_buffer_receiver,
+        ),
         format => eprintln!("Unsupported sample format: {}", format),
     }
 }
@@ -26,8 +53,12 @@ pub fn build_output_device(master_bus: BlockRateAdapter) {
 pub fn build_input_device(sender: Sender<(f32, f32)>) {
     let host = cpal::default_host();
     // Start input.
-    let in_device = host.default_input_device().expect("Could not get default input device!");
-    let in_config = in_device.default_input_config().expect("Could not get default input config!");
+    let in_device = host
+        .default_input_device()
+        .expect("Could not get default input device!");
+    let in_config = in_device
+        .default_input_config()
+        .expect("Could not get default input config!");
 
     println!("Int channels: {:?}", in_config.channels());
     println!("Int sample rate: {:?}", in_config.sample_rate());
@@ -81,15 +112,28 @@ where
     }
 }
 
-fn run_out<T>(device: &cpal::Device, config: &cpal::StreamConfig, mut bus: BlockRateAdapter)
-where
+fn run_out<T>(
+    device: &cpal::Device,
+    config: &cpal::StreamConfig,
+    mut bus: BlockRateAdapter,
+    metronome_buffer_receiver: Receiver<(f32, f32)>,
+) where
     T: SizedSample + FromSample<f32>,
 {
     let channels = config.channels as usize;
 
     bus.set_sample_rate(config.sample_rate.0 as f64);
 
-    let mut next_value = move || bus.get_stereo();
+    let mut next_value = move || {
+        let (mut l, mut r) = bus.get_stereo();
+
+        if let Ok(sample) = metronome_buffer_receiver.try_recv() {
+            l += sample.0;
+            r += sample.1;
+        }
+
+        return (l, r);
+    };
 
     let err_fn = |err| eprintln!("An error occurred on stream: {}", err);
     let stream = device.build_output_stream(

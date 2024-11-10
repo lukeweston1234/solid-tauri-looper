@@ -24,6 +24,8 @@ pub fn run() {
             track_only_feedback,
             set_mixer_gain,
             set_mixer_reverb_mix,
+            start_metronome,
+            stop_metronome
         ])
         .setup(|app| {
             let app_handle = app.app_handle();
