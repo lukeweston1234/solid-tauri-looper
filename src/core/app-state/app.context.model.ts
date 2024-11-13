@@ -11,15 +11,16 @@ export type AppStatus = "playing" | "stopped" | "recording" | "paused";
 export type AppContextType = readonly [
   AppState,
   {
-    readonly setStatus: (status: AppStatus) => void;
+    readonly setStatus: (status: AppStatus) => Promise<void>;
     readonly setBPM: (bpm: number) => void;
-    readonly toggleMetronome: () => void;
+    readonly toggleMetronome: () => Promise<void>;
     readonly setVolume: (volume: number) => void;
-    readonly setTimeSignature: (
+    readonly setTimeInformation: (
       beatsPerMeasure: number,
       beatValue: number,
       bars: number
     ) => void;
+    readonly reset: () => Promise<void>;
   }
 ];
 

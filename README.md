@@ -28,3 +28,4 @@ cargo tauri dev --release
 - [ ] Support for loading samples of different audio formats than f32 .wav.
 - [ ] Sampler view with ADSR, setting different points, pitching up and down. I probably want to tackle this after the audio graph so I can reuse anything found here.
 - [ ] A master compressor would be nice, I want an emulation or algorithm that has a bit of character.
+- [ ] Look into an alternative for actor model, while this model works great in an Async context, I may be wasting a lot of compute waiting/sending messages in a more traditional multithreaded environment. Now that I understand the ownership in this app a bit more, I can probably get away with removing a lot of this bloat once we move away from sending samples with crossbeam.

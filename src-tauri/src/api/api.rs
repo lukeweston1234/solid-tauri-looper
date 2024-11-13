@@ -55,3 +55,8 @@ pub fn start_metronome(app_controller: tauri::State<AppController>) {
 pub fn stop_metronome(app_controller: tauri::State<AppController>) {
     app_controller.stop_metronome();
 }
+
+#[command]
+pub fn reset(app_controller: tauri::State<AppController>) {
+    app_controller.reset();
+}

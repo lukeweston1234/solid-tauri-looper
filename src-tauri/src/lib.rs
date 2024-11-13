@@ -20,6 +20,7 @@ pub fn run() {
             pause,
             stop,
             record,
+            reset,
             start_looping,
             track_only_feedback,
             set_mixer_gain,

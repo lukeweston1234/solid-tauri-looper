@@ -1,3 +1,5 @@
+use std::default;
+
 pub struct AudioSample<T> {
     samples: Vec<T>,
     is_mono: bool,

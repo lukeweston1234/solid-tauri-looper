@@ -11,6 +11,7 @@ pub enum AppControllerEnum {
     Play,
     Pause,
     Stop,
+    Reset,
     AdvanceLooper, // change to reference
     Record(usize),
     TrackOnlyFeedback(usize),
@@ -108,6 +109,20 @@ impl AppController {
     pub fn stop_metronome(&self) {
         let _ = self.sender.send(AppControllerEnum::StopMetronome);
     }
+    pub fn set_bars(&self, bars: u32) {
+        let _ = self.sender.send(AppControllerEnum::SetBars(bars));
+    }
+    pub fn set_bpm(&self, bpm: u32) {
+        let _ = self.sender.send(AppControllerEnum::SetBPM(bpm));
+    }
+    pub fn set_beat_value(&self, beat_value: u32) {
+        let _ = self
+            .sender
+            .send(AppControllerEnum::SetBeatValue(beat_value));
+    }
+    pub fn reset(&self) {
+        let _ = self.sender.send(AppControllerEnum::Reset);
+    }
 }
 
 pub struct App {
@@ -202,6 +217,13 @@ impl App {
     pub fn set_beat_value(&mut self, beat_value: u32) {
         self.beat_value = beat_value;
     }
+    pub fn reset(&mut self) {
+        for track in self.track_controllers.iter() {
+            track.clear_sample();
+            track.stop();
+            self.active_recording_track_index = Some(0);
+        }
+    }
     pub fn advance_looping_track(&mut self, app_handle: &AppHandle) {
         if let Some(track_index) = self.active_recording_track_index {
             println!("{:?}", track_index);
@@ -262,6 +284,7 @@ pub fn run_app(mut app: App, app_handle: AppHandle) {
                     app.track_only_feedback(track_index)
                 }
                 AppControllerEnum::Stop => app.stop(),
+                AppControllerEnum::Reset => app.reset(),
                 AppControllerEnum::SetMixerGain(track_index, gain) => {
                     app.set_mixer_gain(track_index, gain)
                 }

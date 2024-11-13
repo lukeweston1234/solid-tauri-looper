@@ -143,6 +143,11 @@ export function AppStateProvider(props: { children: JSXElement }) {
     }));
   }
 
+  async function reset() {
+    await invoke("reset");
+    setState((prevState) => ({ ...prevState, status: "stopped", tracks: [] }));
+  }
+
   const appState = [
     state,
     {
@@ -150,7 +155,8 @@ export function AppStateProvider(props: { children: JSXElement }) {
       setBPM,
       toggleMetronome,
       setVolume,
-      setTimeSignature: setTimeInformation,
+      setTimeInformation,
+      reset,
     },
   ] as const;
 
