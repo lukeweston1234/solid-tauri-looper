@@ -47,6 +47,7 @@ pub fn start_looping(app_controller: tauri::State<AppController>) {
 
 #[command]
 pub fn start_metronome(app_controller: tauri::State<AppController>) {
+    println!("Start metronome!");
     app_controller.start_metronome();
 }
 

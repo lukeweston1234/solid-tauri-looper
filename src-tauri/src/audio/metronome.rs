@@ -18,10 +18,10 @@ impl MetronomeController {
         Self { sender }
     }
     pub fn start(&self) {
-        self.sender.send(MetronomeState::Start);
+        let _ = self.sender.send(MetronomeState::Start);
     }
     pub fn stop(&self) {
-        self.sender.send(MetronomeState::Start);
+        let _ = self.sender.send(MetronomeState::Stop);
     }
 }
 
@@ -39,8 +39,9 @@ impl Metronome {
         controller_receiver: Receiver<MetronomeState>,
     ) -> Self {
         println!("ENV:{:?}", current_dir());
-        let sample = load_wav("assets/metronome.wav").expect("Could not load metronome");
-        let sampler = Sampler::new(Some(sample));
+        let sample = load_wav("./assets/metronome.wav").expect("Could not load metronome");
+        let mut sampler = Sampler::new(Some(sample));
+        sampler.set_is_looping(false);
         Self {
             state: MetronomeState::Stop,
             sender,
@@ -50,6 +51,7 @@ impl Metronome {
         }
     }
     pub fn start(&mut self) {
+        println!("In self.start");
         self.state = MetronomeState::Start;
     }
     pub fn stop(&mut self) {

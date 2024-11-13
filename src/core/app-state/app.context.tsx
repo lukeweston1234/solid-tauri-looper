@@ -96,7 +96,13 @@ export function AppStateProvider(props: { children: JSXElement }) {
     }));
   }
 
-  function toggleMetronome() {
+  async function toggleMetronome() {
+    console.log(state.isMetronomeOn);
+    if (state.isMetronomeOn) {
+      await invoke("stop_metronome");
+    } else {
+      await invoke("start_metronome");
+    }
     setState((prevState) => ({
       ...prevState,
       isMetronomeOn: !prevState.isMetronomeOn,

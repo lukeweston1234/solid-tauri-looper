@@ -3,10 +3,11 @@ import { useAppContext } from "../../../core/app-state/app.context";
 import { createEffect, Show } from "solid-js";
 
 export default function Header() {
-  const [appState, { setVolume, setStatus }] = useAppContext();
+  const [appState, { setVolume, setStatus, toggleMetronome }] = useAppContext();
   createEffect(() => {
     console.log(appState.masterVolume);
   });
+
   return (
     <div class="w-full grid-cols-3 grid">
       <div class="flex gap-6">
@@ -130,9 +131,7 @@ export default function Header() {
         </button>
       </div>
       <div
-        onClick={async () => {
-          await invoke("start_metronome");
-        }}
+        onClick={toggleMetronome}
         class="flex gap-[72px] items-center justify-end cursor-pointer"
       >
         <input

@@ -106,7 +106,7 @@ impl AppController {
         let _ = self.sender.send(AppControllerEnum::StartMetronome);
     }
     pub fn stop_metronome(&self) {
-        let _ = self.sender.send(AppControllerEnum::StartMetronome);
+        let _ = self.sender.send(AppControllerEnum::StopMetronome);
     }
 }
 
