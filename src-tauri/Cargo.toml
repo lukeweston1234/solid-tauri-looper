@@ -35,4 +35,5 @@ ringbuf = "0.4.7"
 hound = "3.5.1"
 atomic_enum = "0.3.0"
 rand = "0.8.5"
+sysinfo = "0.32.0"
 
