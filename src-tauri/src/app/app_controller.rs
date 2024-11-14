@@ -1,5 +1,6 @@
 use crate::audio::track::TrackController;
 use crate::audio::{metronome::MetronomeController, mixer::MixerNode};
+use crossbeam_channel::select;
 use crossbeam_channel::{bounded, Receiver, Sender};
 use fundsp::hacker32::*;
 use std::sync::Arc;
@@ -273,45 +274,64 @@ pub fn build_app(
 
 pub fn run_app(mut app: App, app_handle: AppHandle) {
     std::thread::spawn(move || loop {
-        // TODO, non blocking with a sleep seems better than a tight loop, but this needs to be refactored
-        if let Ok(msg) = app.app_controller_receiver.try_recv() {
-            app.set_app_state(&msg);
-            match msg {
-                AppControllerEnum::Play => app.play(),
-                AppControllerEnum::Pause => app.pause(),
-                AppControllerEnum::Record(track_index) => app.record(track_index),
-                AppControllerEnum::TrackOnlyFeedback(track_index) => {
-                    app.track_only_feedback(track_index)
+        select! {
+            recv(app.app_controller_receiver) -> msg => {
+                match msg {
+                    Ok(msg) => {
+                        app.set_app_state(&msg);
+                        match msg {
+                            AppControllerEnum::Play => app.play(),
+                            AppControllerEnum::Pause => app.pause(),
+                            AppControllerEnum::Record(track_index) => app.record(track_index),
+                            AppControllerEnum::TrackOnlyFeedback(track_index) => {
+                                app.track_only_feedback(track_index)
+                            }
+                            AppControllerEnum::Stop => app.stop(),
+                            AppControllerEnum::Reset => app.reset(),
+                            AppControllerEnum::SetMixerGain(track_index, gain) => {
+                                app.set_mixer_gain(track_index, gain)
+                            }
+                            AppControllerEnum::SetMixerReverbMix(track_index, mix) => {
+                                app.set_mixer_reverb_mix(track_index, mix);
+                            }
+                            AppControllerEnum::SetBPM(bpm) => app.set_bpm(bpm),
+                            AppControllerEnum::SetBars(bars) => app.set_bars(bars),
+                            AppControllerEnum::SetBeatValue(beat_value) => app.set_beat_value(beat_value),
+                            AppControllerEnum::SetBeatsPerMeasure(beats_per_measure) => {
+                                app.set_beats_per_measure(beats_per_measure)
+                            }
+                            AppControllerEnum::AdvanceLooper => app.advance_looping_track(&app_handle),
+                            AppControllerEnum::StartMetronome => app.start_metronome(),
+                            AppControllerEnum::StopMetronome => app.stop_metronome(),
+                            AppControllerEnum::Exit => break,
+                        }
+                    }
+                    Err(err) => {
+                        eprintln!("Error receiving from app_controller_receiver: {:?}", err);
+                    }
                 }
-                AppControllerEnum::Stop => app.stop(),
-                AppControllerEnum::Reset => app.reset(),
-                AppControllerEnum::SetMixerGain(track_index, gain) => {
-                    app.set_mixer_gain(track_index, gain)
-                }
-                AppControllerEnum::SetMixerReverbMix(track_index, mix) => {
-                    app.set_mixer_reverb_mix(track_index, mix);
-                }
-                AppControllerEnum::SetBPM(bpm) => app.set_bpm(bpm),
-                AppControllerEnum::SetBars(bars) => app.set_bars(bars),
-                AppControllerEnum::SetBeatValue(beat_value) => app.set_beat_value(beat_value),
-                AppControllerEnum::SetBeatsPerMeasure(beats_per_measure) => {
-                    app.set_beats_per_measure(beats_per_measure)
-                }
-                AppControllerEnum::AdvanceLooper => app.advance_looping_track(&app_handle),
-                AppControllerEnum::StartMetronome => app.start_metronome(),
-                AppControllerEnum::StopMetronome => app.stop_metronome(),
-                AppControllerEnum::Exit => break,
             }
+            recv(app.next_loop_receiver) -> msg => {
+                match msg {
+                    Ok(()) => {
+                        app.advance_looping_track(&app_handle);
+                    }
+                    Err(err) => {
+                        eprintln!("Error receiving from next_loop_receiver: {:?}", err);
+                    }
+                }
+            }
+            recv(app.audio_visualization_receiver) -> msg => {
+                match msg {
+                    Ok(sample) => {
+                        let _ = app_handle.emit("visualizer_sample", sample);
+                    }
+                    Err(err) => {
+                        eprintln!("Error receiving from audio_visualization_receiver: {:?}", err);
+                    }
+                }
+            }
+            default => std::thread::sleep(std::time::Duration::from_millis(3))
         }
-
-        if let Ok(()) = app.next_loop_receiver.try_recv() {
-            app.advance_looping_track(&app_handle);
-        }
-
-        if let Ok(sample) = app.audio_visualization_receiver.try_recv() {
-            let _ = app_handle.emit("visualizer_sample", sample);
-        }
-
-        std::thread::sleep(std::time::Duration::from_millis(10));
     });
 }

@@ -1,4 +1,4 @@
-use crate::app::system_info::emit_system_info;
+// use crate::app::system_info::emit_system_info;
 use crate::audio::audio_graph::build_audio_graph;
 use crate::audio::metronome::{build_metronome, run_metronome};
 use crate::audio::stream::{build_input_device, build_output_device};
@@ -11,7 +11,7 @@ use std::env;
 use super::app_controller::{build_app, App, AppController, MixerNodeEnum};
 
 pub fn build_runtime() -> (AppController, App) {
-    env::set_var("RUST_BACKTRACE", "full");
+    // env::set_var("RUST_BACKTRACE", "full");
 
     const VISUALIZER_CHUNK_SIZE: usize = 128;
 
@@ -128,7 +128,7 @@ pub fn build_runtime() -> (AppController, App) {
         metronome_controller,
     );
 
-    emit_system_info();
+    // emit_system_info();
 
     (app_controller, app)
 }
