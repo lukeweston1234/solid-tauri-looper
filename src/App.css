@@ -5,7 +5,7 @@
 :root {
   --primary: #D3FECC;
   --background: #000000;
-  --light-left: background: radial-gradient(50% 50% at 50% 50%, rgba(218, 136, 220, 0.133) 0%, rgba(39, 99, 67, 0) 100%);
+  --light-left: rgba(0,0,0,0);
   --light-right: radial-gradient(50% 50% at 50% 50%, rgba(67, 122, 116, 0.21) 0%, rgba(33, 90, 102, 0.09) 100%);
   --time-marker: #8FFA6A;
 }
@@ -25,16 +25,15 @@ body {
   color: var(--primary);
 }
 
-
-
 .lighting-left {
   position: absolute;
   width: 2642px;
   height: 2791px;
-  left: -1429px;
-  top: -1494px;
+  left: -2400px;
+  top: -2400px;
   background: var(--light-left);
 }
+
 
 .lighting-right {
   position: absolute;
@@ -56,6 +55,7 @@ input[type=range]::-webkit-slider-thumb {
   height: 26px;
   -webkit-appearance: none;
   background: url('./assets/svg/slider.svg');
+  stroke: var(--primary);
   background-size: 15px 24;
   background-position: 0px 0px;
   margin: -10px 0px 0px 0px;
@@ -83,4 +83,18 @@ input[type=range]::-webkit-slider-runnable-track {
 ::-webkit-scrollbar-thumb { 
   background:var(--primary);
   border-radius: 12px;
+}
+
+
+
+.scanlines {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  touch-action: none;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .2), rgba(0, 0, 0, .2) 2px, transparent 2px, transparent 3px);
 }
