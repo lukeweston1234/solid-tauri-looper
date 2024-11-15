@@ -54,3 +54,22 @@ pub fn load_wav(file_path: &str) -> Result<AudioSample<f32>, hound::Error> {
         is_mono: spec.channels == 1,
     })
 }
+
+pub fn load_wav_from_bytes(bytes: &[u8]) -> Result<AudioSample<f32>, hound::Error> {
+    let reader = hound::WavReader::new(bytes)?;
+    let spec = reader.spec();
+    println!("WAV Spec: {:?}", spec);
+
+    let samples: Vec<f32> = match spec.sample_format {
+        hound::SampleFormat::Float => reader
+            .into_samples::<f32>()
+            .collect::<Result<Vec<f32>, _>>()?,
+        _ => panic!("Not supported yet"),
+    };
+
+    Ok(AudioSample {
+        samples,
+        sample_rate: spec.sample_rate,
+        is_mono: spec.channels == 1,
+    })
+}

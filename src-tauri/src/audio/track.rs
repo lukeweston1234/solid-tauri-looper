@@ -125,8 +125,7 @@ where
         }
     }
     fn handle_display_vec(&mut self, sample: (T, T)) {
-        if self.display_average_buffer.len() >= self.initial_vec_size / self.display_vec_chunk_size
-        {
+        if self.state == TrackState::Recording {
             let sum: f32 = self.display_average_buffer.iter().map(|&x| x.into()).sum();
 
             let average = sum / self.display_average_buffer.len() as f32;
@@ -168,7 +167,9 @@ where
         match track.state {
             TrackState::Recording | TrackState::OnlyInput => track.handle_recording(),
             TrackState::Playing => track.handle_playback(),
-            TrackState::Paused | TrackState::Stopped => {}
+            TrackState::Paused | TrackState::Stopped => {
+                std::thread::sleep(std::time::Duration::from_micros(3))
+            }
             TrackState::ClearSample => (),
             TrackState::End => break,
         }

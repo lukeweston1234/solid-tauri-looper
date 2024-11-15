@@ -219,7 +219,7 @@ impl App {
         self.beat_value = beat_value;
     }
     pub fn reset(&mut self) {
-        for track in self.track_controllers.iter() {
+        for track in self.track_controllers.iter_mut() {
             track.clear_sample();
             track.stop();
             self.active_recording_track_index = Some(0);

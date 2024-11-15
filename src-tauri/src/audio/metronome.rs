@@ -1,5 +1,5 @@
 use super::{playable::Playable, sampler::Sampler};
-use crate::audio::audio_sample::load_wav;
+use crate::audio::audio_sample::load_wav_from_bytes;
 use crossbeam_channel::{bounded, Receiver, Sender};
 use std::sync::Arc;
 use std::{env::current_dir, time::Instant};
@@ -39,7 +39,8 @@ impl Metronome {
         controller_receiver: Receiver<MetronomeState>,
     ) -> Self {
         println!("ENV:{:?}", current_dir());
-        let sample = load_wav("./assets/metronome.wav").expect("Could not load metronome");
+        let metronome_buffer = include_bytes!("../../assets/metronome.wav");
+        let sample = load_wav_from_bytes(metronome_buffer).expect("Could not load metronome");
         let mut sampler = Sampler::new(Some(sample));
         sampler.set_is_looping(false);
         Self {
