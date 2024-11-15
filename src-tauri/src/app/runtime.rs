@@ -2,11 +2,9 @@
 use crate::audio::audio_graph::build_audio_graph;
 use crate::audio::metronome::{build_metronome, run_metronome};
 use crate::audio::stream::{build_input_device, build_output_device};
-use crate::audio::{metronome, mixer};
 use crate::audio::{mixer::MixerNode, track::build_track, track::run_track};
 use crossbeam_channel::bounded;
 use fundsp::hacker32::*;
-use std::env;
 
 use super::app_controller::{build_app, App, AppController, MixerNodeEnum};
 
@@ -127,8 +125,6 @@ pub fn build_runtime() -> (AppController, App) {
         visualizer_receiver,
         metronome_controller,
     );
-
-    // emit_system_info();
 
     (app_controller, app)
 }

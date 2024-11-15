@@ -4,7 +4,7 @@ use crossbeam_channel::select;
 use crossbeam_channel::{bounded, Receiver, Sender};
 use fundsp::hacker32::*;
 use std::sync::Arc;
-use std::{clone, usize};
+use std::usize;
 use tauri::{AppHandle, Emitter};
 
 #[derive(Clone)]

@@ -91,6 +91,12 @@ where
         if let Ok(new_state) = self.controller_receiver.try_recv() {
             if new_state == TrackState::Stopped {
                 self.sampler.reset_position();
+
+                if (self.state == TrackState::Recording) {
+                    self.recording_clip = None;
+                }
+
+                self.state = TrackState::Stopped;
             }
             if (new_state) == TrackState::ClearSample {
                 self.sampler.clear_sample();

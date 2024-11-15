@@ -1,12 +1,27 @@
+import { listen } from "@tauri-apps/api/event";
 import { useAppContext } from "../../../core/app-state/app.context";
-import { createEffect, Show } from "solid-js";
+import { createSignal, onCleanup, Show } from "solid-js";
+
+export interface SystemInfo {
+  cpu_usage: number;
+  memory_usage: number;
+}
 
 export default function Header() {
   const [appState, { setVolume, setStatus, toggleMetronome, reset }] =
     useAppContext();
-  createEffect(() => {
-    console.log(appState.masterVolume);
+
+  const [cpuUsage, setCpuUsage] = createSignal(0);
+  const [memoryUsage, setMemoryUsage] = createSignal(0);
+
+  const unlisten = listen("system_info", (event) => {
+    console.log(event.payload);
+    const { cpu_usage, memory_usage } = event.payload as any;
+    setCpuUsage(cpu_usage);
+    setMemoryUsage(memory_usage);
   });
+
+  onCleanup(() => unlisten.then((x) => x()));
 
   return (
     <div class="w-full grid-cols-3 grid">
@@ -31,9 +46,8 @@ export default function Header() {
         </svg>
         <div class="flex items-center gap-6">
           {/* TODO */}
-          <span class="text-sm">MEM 32%</span>
-          <span class="text-sm">CPU 24%</span>
-          <span class="text-sm">TEMP 54°C</span>
+          <span class="text-sm">MEM {memoryUsage()}%</span>
+          <span class="text-sm">CPU {Math.round(cpuUsage() * 100) / 100}%</span>
         </div>
       </div>
       <div class="flex gap-4 items-center justify-center">

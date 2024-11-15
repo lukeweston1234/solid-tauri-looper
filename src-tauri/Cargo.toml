@@ -28,7 +28,6 @@ opt-level = 3
 strip = true 
 target-cpu="native"
 
-
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 

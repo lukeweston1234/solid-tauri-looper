@@ -1,3 +1,4 @@
+use app::system_info::emit_system_info;
 use tauri::Manager;
 
 use crate::api::api::*;
@@ -32,6 +33,8 @@ pub fn run() {
             let app_handle = app.app_handle();
 
             run_app(runtime, app_handle.clone());
+
+            emit_system_info(app_handle.clone());
 
             Ok(())
         })
