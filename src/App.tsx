@@ -8,7 +8,7 @@ import ThemePicker from "./shared/ui/theme/themePicker";
 export default function App() {
   return (
     <AppStateProvider>
-      <div class="w-screen relative h-screen bg-app-background p-8 overflow-clip flex flex-col gap-6">
+      <div class="w-screen relative h-screen bg-app-background p-8 pb-12 overflow-clip flex flex-col gap-6">
         <Lighting />
         <Header />
         <Player />

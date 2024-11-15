@@ -90,6 +90,7 @@ where
     pub fn handle_controller_messages(&mut self) {
         if let Ok(new_state) = self.controller_receiver.try_recv() {
             if new_state == TrackState::Stopped {
+                self.sampler.stop();
                 self.sampler.reset_position();
 
                 if (self.state == TrackState::Recording) {
@@ -131,7 +132,8 @@ where
         }
     }
     fn handle_display_vec(&mut self, sample: (T, T)) {
-        if self.state == TrackState::Recording {
+        if self.display_average_buffer.len() >= self.initial_vec_size / self.display_vec_chunk_size
+        {
             let sum: f32 = self.display_average_buffer.iter().map(|&x| x.into()).sum();
 
             let average = sum / self.display_average_buffer.len() as f32;

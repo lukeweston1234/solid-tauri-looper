@@ -1,7 +1,7 @@
 use crate::audio::track::TrackController;
 use crate::audio::{metronome::MetronomeController, mixer::MixerNode};
-use crossbeam_channel::select;
 use crossbeam_channel::{bounded, Receiver, Sender};
+use crossbeam_channel::{select, select_biased};
 use fundsp::hacker32::*;
 use std::sync::Arc;
 use std::usize;
@@ -274,7 +274,17 @@ pub fn build_app(
 
 pub fn run_app(mut app: App, app_handle: AppHandle) {
     std::thread::spawn(move || loop {
-        select! {
+        select_biased! {
+            recv(app.next_loop_receiver) -> msg => {
+                match msg {
+                    Ok(()) => {
+                        app.advance_looping_track(&app_handle);
+                    }
+                    Err(err) => {
+                        eprintln!("Error receiving from next_loop_receiver: {:?}", err);
+                    }
+                }
+            }
             recv(app.app_controller_receiver) -> msg => {
                 match msg {
                     Ok(msg) => {
@@ -311,16 +321,6 @@ pub fn run_app(mut app: App, app_handle: AppHandle) {
                     }
                 }
             }
-            recv(app.next_loop_receiver) -> msg => {
-                match msg {
-                    Ok(()) => {
-                        app.advance_looping_track(&app_handle);
-                    }
-                    Err(err) => {
-                        eprintln!("Error receiving from next_loop_receiver: {:?}", err);
-                    }
-                }
-            }
             recv(app.audio_visualization_receiver) -> msg => {
                 match msg {
                     Ok(sample) => {
@@ -331,7 +331,6 @@ pub fn run_app(mut app: App, app_handle: AppHandle) {
                     }
                 }
             }
-            default => std::thread::sleep(std::time::Duration::from_millis(3))
         }
     });
 }
