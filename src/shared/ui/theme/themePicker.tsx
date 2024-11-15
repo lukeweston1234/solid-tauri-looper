@@ -35,17 +35,17 @@ export default function ThemePicker() {
     <div
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
-      class="absolute bottom-6 left-6 flex gap-1 items-center z-50 cursor-pointer hover:brightness-150 transition-all duration-300"
+      class="absolute bottom-4 left-6 flex gap-1 items-center z-50 cursor-pointer hover:brightness-150 transition-all duration-300"
     >
       <button class="flex gap-1">
-        <span>{themes[activeThemeIndex()].name}</span>
+        <span class="text-sm">{themes[activeThemeIndex()].name}</span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           stroke-width="2"
           stroke="currentColor"
-          class="size-5 mt-[2px]"
+          class="size-4 mt-[3px]"
         >
           <path
             stroke-linecap="round"
@@ -66,7 +66,7 @@ export default function ThemePicker() {
                   viewBox="0 0 24 24"
                   stroke-width="2"
                   stroke="currentColor"
-                  class="size-5 mt-[2px]"
+                  class="size-4 "
                 >
                   <path
                     stroke-linecap="round"
@@ -77,6 +77,7 @@ export default function ThemePicker() {
               )}
 
               <span
+                class="text-sm"
                 onClick={() =>
                   setCSSVariables(theme.theme, themes.indexOf(theme))
                 }

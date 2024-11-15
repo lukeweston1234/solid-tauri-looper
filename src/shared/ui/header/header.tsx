@@ -160,10 +160,7 @@ export default function Header() {
           </svg>
         </button>
       </div>
-      <div
-        onClick={toggleMetronome}
-        class="flex gap-[72px] items-center justify-end cursor-pointer"
-      >
+      <div class="flex gap-[72px] items-center justify-end cursor-pointer">
         <input
           id="default-range"
           type="range"
