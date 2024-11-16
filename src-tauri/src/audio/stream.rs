@@ -1,5 +1,5 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::{FromSample, SizedSample};
+use cpal::{default_host, FromSample, SizedSample};
 use fundsp::hacker32::*;
 
 use crossbeam_channel::{Receiver, Sender};
@@ -52,7 +52,20 @@ pub fn build_output_device(
 }
 
 pub fn build_input_device(sender: Sender<(f32, f32)>) {
-    let host = cpal::default_host();
+    let host;
+    #[cfg(target_os = "windows")]
+    {
+        host = cpal::host_from_id(cpal::HostId::Asio).expect("failed to initialise ASIO host");
+    }
+    #[cfg(target_os = "macos")]
+    {
+        host = default_host();
+    }
+    #[cfg(target_os = "linux")]
+    {
+        host = default_host();
+    }
+
     // Start input.
     let in_device = host
         .default_input_device()
@@ -70,6 +83,7 @@ pub fn build_input_device(sender: Sender<(f32, f32)>) {
     match in_config.sample_format() {
         cpal::SampleFormat::F32 => run_in::<f32>(&in_device, &in_config.into(), sender),
         cpal::SampleFormat::I16 => run_in::<i16>(&in_device, &in_config.into(), sender),
+        cpal::SampleFormat::I32 => run_in::<i32>(&in_device, &in_config.into(), sender),
         cpal::SampleFormat::U16 => run_in::<u16>(&in_device, &in_config.into(), sender),
         format => eprintln!("Unsupported sample format: {}", format),
     }

@@ -41,7 +41,6 @@ pub fn run() {
         ])
         .setup(move |app| {
 
-
             let app_handle = app.app_handle();
 
             let window = app.get_webview_window("main").unwrap();
