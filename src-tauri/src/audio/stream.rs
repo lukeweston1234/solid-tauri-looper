@@ -26,6 +26,7 @@ pub fn build_output_device(
     println!("Out channels: {:?}", out_config.channels());
     println!("Out sample rate: {:?}", out_config.sample_rate());
     println!("Out sample format: {:?}", out_config.sample_format());
+    println!("Out sample format: {:?}", out_config.buffer_size());
 
     match out_config.sample_format() {
         cpal::SampleFormat::F32 => run_out::<f32>(
@@ -63,6 +64,8 @@ pub fn build_input_device(sender: Sender<(f32, f32)>) {
     println!("Int channels: {:?}", in_config.channels());
     println!("Int sample rate: {:?}", in_config.sample_rate());
     println!("Int sample format: {:?}", in_config.sample_format());
+    println!("Int sample format: {:?}", in_config.buffer_size());
+
 
     match in_config.sample_format() {
         cpal::SampleFormat::F32 => run_in::<f32>(&in_device, &in_config.into(), sender),

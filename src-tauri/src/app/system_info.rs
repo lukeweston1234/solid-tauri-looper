@@ -14,8 +14,6 @@ pub fn emit_system_info(app_handle: AppHandle) {
         loop {
             let memory_usage = sys.used_memory() as f64;
             let total_memory = sys.total_memory() as f64;
-            println!("{:?}", memory_usage);
-            println!("{:?}", total_memory);
 
             let percentage_memory_used = ((memory_usage / total_memory) * 100.0).round();
 
@@ -28,8 +26,6 @@ pub fn emit_system_info(app_handle: AppHandle) {
                 cpu_usage: average_cpu_usage,
                 memory_usage: percentage_memory_used,
             };
-
-            println!("{:?}", system_info);
 
             if let Err(e) = app_handle.emit("system_info", &system_info) {
                 eprintln!("Failed to emit system info: {}", e);

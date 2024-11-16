@@ -23,23 +23,24 @@ export function AppStateProvider(props: { children: JSXElement }) {
       beatsPerMeasure: 4,
     },
     tracks: [
-      {
-        index: 0,
-        displayBuffer: {
-          position: 0,
-          buffer: Array(VISUALIZER_CHUNK_SIZE).fill(0),
-        },
-        isMuted: false,
-        isSoloed: false,
-        reverbWet: 0.5,
-        volume: 1,
-      },
+      // {
+      //   index: 0,
+      //   displayBuffer: {
+      //     position: 0,
+      //     buffer: Array(VISUALIZER_CHUNK_SIZE).fill(0),
+      //   },
+      //   isMuted: false,
+      //   isSoloed: false,
+      //   reverbWet: 0.5,
+      //   volume: 1,
+      // },
     ],
   });
 
   const trackAddedListener = listen("track_added", (event) => {
+    console.log(event.payload);
     const recordingIndex = event.payload as number;
-    if (recordingIndex - 1 > state.maxTracks) return;
+    if (recordingIndex >= state.maxTracks) return;
     const tracks: TrackItem[] = [
       ...state.tracks,
       {

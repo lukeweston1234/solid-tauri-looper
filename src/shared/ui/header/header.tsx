@@ -41,7 +41,7 @@ export default function Header() {
   onCleanup(() => unlisten.then((x) => x()));
 
   return (
-    <div class="w-full grid-cols-3 grid">
+    <div class="w-full grid-cols-3 grid z-20">
       <div class="flex gap-6 items-center">
         <svg
           width="60"

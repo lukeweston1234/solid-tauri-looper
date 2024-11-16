@@ -1,9 +1,12 @@
 use app::system_info::emit_system_info;
-use tauri::Manager;
+use tauri::{Listener, Manager};
+use window_vibrancy::{apply_acrylic};
+
 
 use crate::api::api::*;
 use crate::app::app_controller::run_app;
 use crate::app::runtime::build_runtime;
+
 
 mod api;
 mod app;
@@ -11,12 +14,13 @@ mod audio;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    
     let (app_controller, runtime) = build_runtime();
 
-    app_controller.track_only_feedback(0);
+    let app_controller_handle = app_controller.clone();
 
     tauri::Builder::default()
-        .manage(app_controller)
+        .manage(app_controller_handle)
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
             play,
@@ -35,10 +39,21 @@ pub fn run() {
             start_metronome,
             stop_metronome
         ])
-        .setup(|app| {
+        .setup(move |app| {
+
+
             let app_handle = app.app_handle();
 
+            let window = app.get_webview_window("main").unwrap();
+
+            apply_acrylic(&window, Some((0,0,0,1))).expect("Unsupported platform");
+
             run_app(runtime, app_handle.clone());
+
+            app_handle.listen_any("app_ready", move |_event| {
+                app_controller.add_track_to_client();
+                app_controller.track_only_feedback(0);
+            });
 
             emit_system_info(app_handle.clone());
 

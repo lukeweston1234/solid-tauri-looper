@@ -29,6 +29,7 @@ pub enum AppControllerEnum {
     ToggleSolo(usize),
     StartMetronome,
     StopMetronome,
+    SendAddTrackEvent,
 }
 
 // This is gross, but I want to access nodes from an index,
@@ -103,6 +104,7 @@ impl MixerNodeEnum {
         }
     }
 }
+
 pub struct AppController {
     sender: Sender<AppControllerEnum>,
 }
@@ -175,6 +177,9 @@ impl AppController {
     }
     pub fn toggle_solo(&self, index: usize) {
         let _ = self.sender.send(AppControllerEnum::ToggleSolo(index));
+    }
+    pub fn add_track_to_client(&self){
+        let _ = self.sender.send(AppControllerEnum::SendAddTrackEvent);
     }
 }
 
@@ -289,7 +294,7 @@ impl App {
     pub fn advance_looping_track(&mut self, app_handle: &AppHandle) {
         if let Some(track_index) = self.active_recording_track_index {
             println!("{:?}", track_index);
-            if self.track_size > track_index {
+            if  track_index < self.track_size {
                 self.active_recording_track_index = Some(track_index + 1);
                 self.record(track_index + 1);
                 let _ = app_handle.emit("track_added", self.active_recording_track_index);
@@ -301,6 +306,11 @@ impl App {
             self.record(0);
             let _ = app_handle.emit("track_added", self.active_recording_track_index);
         }
+    }
+    pub fn add_track_to_client(&mut self, app_handle: &AppHandle){
+        // used for inti
+        let _ = app_handle.emit("track_added", 0);
+        self.active_recording_track_index = Some(0);
     }
     pub fn start_metronome(&self) {
         self.metronome_controller.start();
@@ -414,6 +424,7 @@ pub fn run_app(mut app: App, app_handle: AppHandle) {
                             AppControllerEnum::SetMasterReverbMix(wet) => app.set_master_reverb_wet(wet),
                             AppControllerEnum::ToggleMute(index) => app.toggle_mute(index),
                             AppControllerEnum::ToggleSolo(index) => app.toggle_solo(index),
+                            AppControllerEnum::SendAddTrackEvent => app.add_track_to_client(&app_handle),
                             AppControllerEnum::Exit => break,
                         }
                     }
