@@ -38,7 +38,7 @@ export default function ThemePicker() {
       class="absolute bottom-4 left-6 flex gap-1 items-center z-50 cursor-pointer hover:brightness-150 transition-all duration-300"
     >
       <button class="flex gap-1">
-        <span class="text-sm">{themes[activeThemeIndex()].name}</span>
+        <span class="text-sm w-[64px]">{themes[activeThemeIndex()].name}</span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -56,7 +56,7 @@ export default function ThemePicker() {
       </button>
 
       <Show when={isOpen()}>
-        <For each={themes.filter((_, i) => i !== activeThemeIndex())}>
+        <For each={themes}>
           {(theme, i) => (
             <div class="flex items-center gap-1">
               {i() !== 0 && (
