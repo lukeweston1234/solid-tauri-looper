@@ -13,6 +13,8 @@ mod audio;
 pub fn run() {
     let (app_controller, runtime) = build_runtime();
 
+    app_controller.track_only_feedback(0);
+
     tauri::Builder::default()
         .manage(app_controller)
         .plugin(tauri_plugin_shell::init())
@@ -25,7 +27,9 @@ pub fn run() {
             start_looping,
             track_only_feedback,
             set_mixer_gain,
-            set_mixer_reverb_mix,
+            set_mixer_reverb_wet,
+            set_master_reverb_wet,
+            set_master_gain,
             start_metronome,
             stop_metronome
         ])

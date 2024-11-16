@@ -6,6 +6,7 @@ pub struct MixerNode<const ID: u64> {
     receiver: Receiver<(f32, f32)>,
     pub reverb_mix: Shared,
     pub gain: Shared,
+    pub cached_gain: Option<f32>,
 }
 
 impl<const ID: u64> MixerNode<ID> {
@@ -14,6 +15,7 @@ impl<const ID: u64> MixerNode<ID> {
             receiver,
             reverb_mix: shared(0.0),
             gain: shared(1.0),
+            cached_gain: None,
         }
     }
     pub fn get_gain(&self) -> Shared {
@@ -27,6 +29,19 @@ impl<const ID: u64> MixerNode<ID> {
     }
     pub fn set_reverb_mix(&self, reverb_mix: f32) {
         self.reverb_mix.set_value(reverb_mix);
+    }
+    pub fn mute(&mut self) {
+        self.cached_gain = Some(self.gain.value());
+        self.gain.set_value(0.0);
+    }
+    pub fn unmute(&mut self) {
+        self.gain.set_value(self.cached_gain.take().unwrap_or(1.0));
+    }
+    pub fn toggle_mute(&mut self) {
+        match self.cached_gain {
+            Some(_) => self.unmute(),
+            None => self.mute(),
+        }
     }
 }
 

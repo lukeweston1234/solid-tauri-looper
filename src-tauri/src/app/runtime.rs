@@ -80,7 +80,7 @@ pub fn build_runtime() -> (AppController, App) {
     run_track(track_six);
     run_track(feedback_track);
 
-    let master_bus = build_audio_graph(
+    let (master_bus, master_gain, master_reverb) = build_audio_graph(
         mixer_one.clone(),
         mixer_two.clone(),
         mixer_three.clone(),
@@ -124,6 +124,8 @@ pub fn build_runtime() -> (AppController, App) {
         next_looper_receiver,
         visualizer_receiver,
         metronome_controller,
+        master_gain,
+        master_reverb,
     );
 
     (app_controller, app)

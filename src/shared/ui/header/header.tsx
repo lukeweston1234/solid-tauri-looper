@@ -1,6 +1,8 @@
 import { listen } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
 import { useAppContext } from "../../../core/app-state/app.context";
 import { createSignal, onCleanup, Show } from "solid-js";
+import Knob from "../knob/knob";
 
 export interface SystemInfo {
   cpu_usage: number;
@@ -20,6 +22,21 @@ export default function Header() {
     setCpuUsage(cpu_usage);
     setMemoryUsage(memory_usage);
   });
+
+  let timeout: any;
+
+  async function setMasterGain(gain: number) {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    timeout = setTimeout(async () => {
+      await invoke("set_master_gain", { gain: gain });
+    }, 30);
+  }
+
+  async function setMasterReverbWet(wet: number) {
+    await invoke("set_master_reverb_wet", { wet: wet });
+  }
 
   onCleanup(() => unlisten.then((x) => x()));
 
@@ -160,20 +177,28 @@ export default function Header() {
           </svg>
         </button>
       </div>
-      <div class="flex gap-[72px] items-center justify-end cursor-pointer">
-        <input
-          id="default-range"
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          onInput={(e) => setVolume(Number(e.target.value))}
-          value={appState.masterVolume}
-          class="cursor-pointer"
-        />
+      <div class="flex gap-6 items-center justify-end cursor-pointer">
+        <div class="flex gap-6 items-center">
+          <input
+            id="default-range"
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            onInput={(e) => setMasterGain(Number(e.target.value))}
+            value={appState.masterVolume}
+            class="cursor-pointer"
+          />
+          <Knob
+            debounceTime={30}
+            initialValue={0.3}
+            onValueChange={(x) => setMasterReverbWet(x)}
+          />
+        </div>
+
         <div class="flex gap-6">
-          <span>{`${appState.bpm} BPM`}</span>
-          <span>{`${appState.timeInformation.beatsPerMeasure}/${appState.timeInformation.beatValue}`}</span>
+          <span class="text-nowrap text-sm">{`${appState.bpm} BPM`}</span>
+          <span class="text-sm">{`${appState.timeInformation.beatsPerMeasure}/${appState.timeInformation.beatValue}`}</span>
         </div>
       </div>
     </div>

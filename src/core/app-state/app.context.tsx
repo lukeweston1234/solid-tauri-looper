@@ -22,7 +22,19 @@ export function AppStateProvider(props: { children: JSXElement }) {
       beatValue: 4,
       beatsPerMeasure: 4,
     },
-    tracks: [],
+    tracks: [
+      {
+        index: 0,
+        displayBuffer: {
+          position: 0,
+          buffer: Array(VISUALIZER_CHUNK_SIZE).fill(0),
+        },
+        isMuted: false,
+        isSoloed: false,
+        reverbWet: 0.5,
+        volume: 1,
+      },
+    ],
   });
 
   const trackAddedListener = listen("track_added", (event) => {

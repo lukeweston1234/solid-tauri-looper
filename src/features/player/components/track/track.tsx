@@ -1,8 +1,27 @@
 import { TrackItem } from "./track.model";
 import AudioVisualization from "../audio-visualization/audio-visualization";
 import Knob from "../../../../shared/ui/knob/knob";
+import { invoke } from "@tauri-apps/api/core";
 
 export function Track(props: TrackItem & { isLast: boolean }) {
+  let timeout: any;
+
+  async function updateReverbWet(wet: number) {
+    await invoke("set_mixer_reverb_wet", { trackIndex: props.index, wet: wet });
+  }
+
+  async function updateGain(gain: number) {
+    if (timeout) clearTimeout(timeout);
+
+    timeout = setTimeout(async () => {
+      console.log(gain);
+      await invoke("set_mixer_gain", {
+        trackIndex: props.index,
+        gain: gain,
+      });
+    }, 30);
+  }
+
   return (
     <div class="w-full h-32 flex gap-6 items-center flex-shrink-0">
       <div
@@ -34,20 +53,37 @@ export function Track(props: TrackItem & { isLast: boolean }) {
       </div>
       <div class="h-full flex gap-6 justify-between items-center">
         <div class="w-[26px] h-full flex items-center justify-center">
-          <input class="-rotate-90 w-[96px]" type="range"></input>
+          <input
+            onInput={(x) => updateGain(Number(x.target.value))}
+            class="-rotate-90 w-[96px]"
+            type="range"
+            step={0.05}
+            min={0}
+            max={1.5}
+          ></input>
         </div>
         <div class="flex flex-col gap-3">
-          <button class="w-14 h-6 border-2 border-app-primary flex items-center justify-center">
+          <button
+            onClick={async () => {
+              await invoke("toggle_solo", { trackIndex: props.index });
+            }}
+            class="w-14 h-6 border-2 border-app-primary flex items-center justify-center"
+          >
             S
           </button>
-          <button class="w-14 h-6 border-2 border-app-primary flex items-center justify-center">
+          <button
+            onClick={async () => {
+              await invoke("toggle_mute", { trackIndex: props.index });
+            }}
+            class="w-14 h-6 border-2 border-app-primary flex items-center justify-center"
+          >
             M
           </button>
         </div>
         <Knob
           initialValue={0.33}
-          debounceTime={200}
-          onValueChange={(x) => console.log(x)}
+          debounceTime={30}
+          onValueChange={(x) => updateReverbWet(x)}
         ></Knob>
       </div>
     </div>

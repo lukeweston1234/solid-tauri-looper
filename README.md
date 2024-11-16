@@ -11,15 +11,13 @@ cargo tauri dev --release
 ```
 ### Known Issues / Planned Fixes
 
-- Currently just waiting for the buffer to fill to loop, rather than using the clock. This causes the "clock" app to drift. When I start adding new instruments, midi, etc., I plan on having the app being more careful with time.
 
-- Using FunDSP as a placeholder for a custom DSP setup, lots of weird traits if I wanted to turn the original iterator based track and mixer into an AudioNode (I originally followed an approach similar to Rodio's dynamic mixer, with a double buffer). Additionally, I had quite a bit of confusion as to how I could create these mixers at runtime, as the traits needed constant values. The audio graph has a lot of replicated code for the time being, and if anyone has a solution to get around the constants, or an example using an alternative runtime struct, that would be greatly appreciated. Additionally, I followed the example in the docs for their inputs, and decided to just send samples to the audio graph via crossbeam. This doesn't scale well and gives me much worse performance than the iterator/double buffer approach, but hey, placeholder effects!
+- Using FunDSP as a placeholder for a custom DSP setup, lots of weird traits if I wanted to turn the original iterator based track and mixer into an AudioNode (I originally followed an approach similar to Rodio's dynamic mixer, with a double buffer). Additionally, I had quite a bit of confusion as to how I could create these mixers at runtime, as the traits needed constant values. The audio graph has a lot of replicated code for the time being, and if anyone has a solution to get around the constants, or an example using an alternative runtime struct, that would be greatly appreciated. Additionally, I followed the example in the docs for their inputs, and decided to just send samples to the audio graph via crossbeam. This gives much worse performance. There is another repo I have with a similiar backend using Freeverb instead, but it sounds noticably worse, and I will need to add some sort of attack to the reverb to prevent "bloom" or popping when the reverb is activated. 
 
-- For the time being, I am just not going to allow the time to change during the performance. I don't really ever use this feature when I make music, and it is not worth the haste for me.
+- For the time being, I am just not going to allow the time to change during the performance. I don't really ever use this feature when I make music, and it is not worth the hastle for me.
 
 ### Planned Features
 
-- [ ] Basic audio graph and reverb implementation, would be nice to even have latency compensation, but I plan on just keeping the potential graphs small for the time being. This will then let me roll back to the double buffer recording approach, or maybe I continue the same multi input receiver setup and just use the iterators to build the mixers as opposed to sending samples via crossbeam or a ringbuffer. I was able to get pretty much as many tracks as possible with this approach before I had any latency or popping issues.
 - [ ] Create a more structured event loop based on a central clock.
 - [ ] Basic synthesizer, perhaps a 5 voice synth with FM capabilities, ADSR, tunable voices, sin, square, saw, etc. LFOs that can map to different parameters would also be nice
 - [ ] Midi in, midi looping, clock out.
