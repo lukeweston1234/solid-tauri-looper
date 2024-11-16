@@ -42,7 +42,7 @@ export default function Header() {
 
   return (
     <div class="w-full grid-cols-3 grid">
-      <div class="flex gap-6">
+      <div class="flex gap-6 items-center">
         <svg
           width="60"
           height="40"
