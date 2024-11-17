@@ -5,10 +5,18 @@ This is a Tauri application, which uses a SolidJS frontend, combined with a Rust
   
 First, install the tauri CLI, you can then run with tauri dev, the release flag is needed for performance, FunDSP sometimes overflows the stack as well if you don't pass the release flag.
 
+#### Windows
+
+For windows, you will have much lower latency with ASIO (atleast from my experience).
+[Install LLVM for the CPAL ASIO installer for windows here](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.8)
+
+You will want to use the LLVM-18.1.8-win64/32.exe installer, make sure to add it to your path
+
 ```
 cargo install tauri-cli
 cargo tauri dev --release
 ```
+
 ### Known Issues / Planned Fixes
 
 - Currently just waiting for the buffer to fill to loop, rather than using the clock. This causes the "clock" app to drift. When I start adding new instruments, midi, etc., I plan on having the app being more careful with time.
