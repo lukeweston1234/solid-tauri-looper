@@ -27,7 +27,32 @@ export function Player() {
         <div class="w-[calc(100%-218px)]">
           <Clock />
         </div>
-        <div id="track-container" class="h-auto flex flex-col overflow-y-auto">
+        <div
+          id="track-container"
+          class="h-auto flex-1 flex flex-col overflow-y-auto relative"
+        >
+          <div class="absolute top-0 left-0 bottom-0 w-[calc(100%-218px)] grid grid-flow-col">
+            <For
+              each={Array(
+                state.timeInformation.bars *
+                  state.timeInformation.beatsPerMeasure *
+                  2
+              )}
+            >
+              {(_, i) => (
+                <div
+                  class={`h-full w-[1px] bg-app-primary ${
+                    i()
+                      ? i() % 2 == 0
+                        ? "opacity-30"
+                        : "opacity-10"
+                      : "opacity-0"
+                  } `}
+                ></div>
+              )}
+            </For>
+          </div>
+
           <For each={state.tracks}>
             {(child, i) => (
               <Track
