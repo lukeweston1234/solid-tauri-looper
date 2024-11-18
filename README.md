@@ -9,7 +9,7 @@ First, install the tauri CLI, you can then run with tauri dev, the release flag 
 
 #### Windows
 
-For windows, you will have much lower latency with ASIO (atleast from my experience).
+For windows, you may have much lower latency from smaller buffers with ASIO (atleast from my experience).
 [Install LLVM for the CPAL ASIO installer for windows here](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.8)
 
 You will want to use the LLVM-18.1.8-win64/32.exe installer, make sure to add it to your path
@@ -37,3 +37,4 @@ cargo tauri dev --release
 - [ ] Support for loading samples of different audio formats than f32 .wav.
 - [ ] Sampler view with ADSR, setting different points, pitching up and down. I probably want to tackle this after the audio graph so I can reuse anything found here.
 - [ ] A master compressor would be nice, I want an algorithm that has a bit of character.
+- [ ] SQLite support for saved sessions, saved themes, default themes, etc.
