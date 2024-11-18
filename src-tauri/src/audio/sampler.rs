@@ -22,9 +22,9 @@ where
             is_looping: true,
         }
     }
+    // Note, we don't need pause, because we just don't increment the next sampler iterator
     pub fn play(&mut self) {
         self.is_playing = true;
-        self.position = 0;
     }
     pub fn stop(&mut self) {
         self.is_playing = false;

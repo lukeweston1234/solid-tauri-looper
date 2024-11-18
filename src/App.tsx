@@ -12,7 +12,7 @@ export default function App() {
     console.log("emitting app ready");
     setTimeout(async () => {
       await emit("app_ready");
-    }, 2000);
+    }, 500);
   });
   return (
     <AppStateProvider>

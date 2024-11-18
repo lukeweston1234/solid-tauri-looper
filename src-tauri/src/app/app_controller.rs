@@ -1,8 +1,9 @@
-use crate::audio::track::TrackController;
+use crate::audio::track::{TrackController, TrackState};
 use crate::audio::{metronome::MetronomeController, mixer::MixerNode};
 use crossbeam_channel::{bounded, Receiver, Sender};
 use crossbeam_channel::{select, select_biased};
 use fundsp::hacker32::*;
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::usize;
 use tauri::{AppHandle, Emitter};
@@ -199,6 +200,7 @@ pub struct App {
     metronome_controller: Arc<MetronomeController>,
     master_gain: Shared,
     master_reverb_wet: Shared,
+    track_state: Vec<TrackState>,
     is_solo: bool,
 }
 impl App {
@@ -211,6 +213,7 @@ impl App {
         metronome_controller: Arc<MetronomeController>,
         master_gain: Shared,
         master_reverb_wet: Shared,
+        track_size: usize,
     ) -> Self {
         Self {
             bpm: 120,
@@ -219,7 +222,7 @@ impl App {
             beats_per_measure: 4,
             app_controller_receiver,
             active_recording_track_index: None,
-            track_size: 6, // 7th track is feedback only
+            track_size, // 7th track is feedback only
             next_loop_receiver,
             audio_visualization_receiver,
             state: AppControllerEnum::Stop,
@@ -228,6 +231,7 @@ impl App {
             metronome_controller: metronome_controller,
             master_gain,
             master_reverb_wet,
+            track_state: vec![TrackState::Stopped; track_size],
             is_solo: false,
         }
     }
@@ -283,15 +287,26 @@ impl App {
     pub fn set_beat_value(&mut self, beat_value: u32) {
         self.beat_value = beat_value;
     }
-    pub fn reset(&mut self) {
+    pub fn reset(&mut self, app_handle: &AppHandle) {
         for track in self.track_controllers.iter_mut() {
             track.clear_sample();
-            track.stop();
-            self.active_recording_track_index = None;
         }
         self.track_only_feedback(0);
+        self.active_recording_track_index = None;
+        self.add_track_to_client(app_handle);
     }
     pub fn advance_looping_track(&mut self, app_handle: &AppHandle) {
+        // First, we see if we are resuming any tracks, otherwise, we add a track
+        // for i in 0..self.track_size {
+        //     if let Some(track_state) = self.track_state.get(i) {
+        //         if *track_state == TrackState::Recording {
+        //             self.active_recording_track_index = Some(i);
+        //             self.record(i);
+        //             return;
+        //         }
+        //     }
+        // }
+
         if let Some(track_index) = self.active_recording_track_index {
             println!("{:?}", track_index);
             if track_index + 1 < self.track_size {
@@ -372,6 +387,7 @@ pub fn build_app(
         metronome_controller,
         master_gain,
         master_reverb_wet,
+        6,
     );
 
     (app_controller, app)
@@ -402,7 +418,7 @@ pub fn run_app(mut app: App, app_handle: AppHandle) {
                                 app.track_only_feedback(track_index)
                             }
                             AppControllerEnum::Stop => app.stop(),
-                            AppControllerEnum::Reset => app.reset(),
+                            AppControllerEnum::Reset => app.reset(&app_handle),
                             AppControllerEnum::SetMixerGain(track_index, gain) => {
                                 app.set_mixer_gain(track_index, gain)
                             }

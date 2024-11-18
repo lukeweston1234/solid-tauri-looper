@@ -158,20 +158,12 @@ export function AppStateProvider(props: { children: JSXElement }) {
   }
 
   async function reset() {
-    await invoke("reset");
     setState((prevState) => ({
       ...prevState,
       status: "stopped",
-      tracks: [
-        {
-          ...prevState.tracks[0]!,
-          displayBuffer: {
-            position: 0,
-            buffer: Array(VISUALIZER_CHUNK_SIZE).fill(0),
-          },
-        },
-      ],
+      tracks: [],
     }));
+    await invoke("reset");
   }
 
   const appState = [
