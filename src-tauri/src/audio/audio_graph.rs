@@ -14,7 +14,7 @@ pub fn build_audio_graph(
     mixer_five: An<MixerNode<5>>,
     mixer_six: An<MixerNode<6>>,
     mixer_feedback: An<MixerNode<7>>,
-) -> Box<dyn AudioUnit> {
+) -> (Box<dyn AudioUnit>, Shared, Shared) {
     let reverb = reverb2_stereo(20.0, 3.0, 1.0, 0.2, highshelf_hz(1000.0, 1.0, db_amp(-1.0)));
     let chorus = chorus(0, 0.0, 0.03, 0.2) | chorus(1, 0.0, 0.03, 0.2);
 
@@ -88,5 +88,5 @@ pub fn build_audio_graph(
             & ((1.0 - var(&master_reverb)) | (1.0 - var(&master_reverb))) * multipass())
         >> multipass() * (var(&master_gain) | var(&master_gain));
 
-    Box::new(master_bus)
+    (Box::new(master_bus), master_gain, master_reverb)
 }

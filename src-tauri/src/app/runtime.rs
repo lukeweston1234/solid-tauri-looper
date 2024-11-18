@@ -5,10 +5,11 @@ use crate::audio::stream::{build_input_device, build_output_device};
 use crate::audio::{mixer::MixerNode, track::build_track, track::run_track};
 use crossbeam_channel::bounded;
 use fundsp::hacker32::*;
+use std::sync::Arc;
 
 use super::app_controller::{build_app, App, AppController, MixerNodeEnum};
 
-pub fn build_runtime() -> (AppController, App) {
+pub fn build_runtime() -> (Arc<AppController>, App) {
     // env::set_var("RUST_BACKTRACE", "full");
 
     const VISUALIZER_CHUNK_SIZE: usize = 128;
@@ -80,7 +81,7 @@ pub fn build_runtime() -> (AppController, App) {
     run_track(track_six);
     run_track(feedback_track);
 
-    let master_bus = build_audio_graph(
+    let (master_bus, master_gain, master_reverb) = build_audio_graph(
         mixer_one.clone(),
         mixer_two.clone(),
         mixer_three.clone(),
@@ -124,7 +125,9 @@ pub fn build_runtime() -> (AppController, App) {
         next_looper_receiver,
         visualizer_receiver,
         metronome_controller,
+        master_gain,
+        master_reverb,
     );
 
-    (app_controller, app)
+    (Arc::new(app_controller), app)
 }

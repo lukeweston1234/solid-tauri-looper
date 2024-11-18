@@ -1,7 +1,9 @@
+use std::default;
+
 use super::{audio_sample::AudioSample, playable::Playable, sampler::Sampler};
 use crossbeam_channel::{bounded, unbounded, Receiver, Sender};
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum TrackState {
     Playing,
     Paused,
@@ -69,7 +71,6 @@ where
         next_loop_sender: Sender<()>,
         audio_display_sender: Sender<f32>,
         sampler: Sampler<T>,
-        recording_clip: Option<Vec<T>>,
         initial_vec_size: usize,
         display_vec_size: usize,
     ) -> Self {
@@ -80,33 +81,66 @@ where
             next_loop_sender,
             audio_display_sender,
             state: TrackState::Stopped,
-            sampler: sampler,
+            sampler,
             recording_clip: Some(Vec::with_capacity(initial_vec_size)),
             initial_vec_size,
             display_vec_chunk_size: display_vec_size,
             display_average_buffer: Vec::with_capacity(initial_vec_size / display_vec_size),
         }
     }
-    pub fn handle_controller_messages(&mut self) {
-        if let Ok(new_state) = self.controller_receiver.try_recv() {
-            if new_state == TrackState::Stopped {
+    // pub fn handle_controller_messages(&mut self) {
+    //     if let Ok(new_state) = self.controller_receiver.try_recv() {
+    //         if new_state == TrackState::Stopped {
+    //             self.sampler.stop();
+    //             self.sampler.reset_position();
+
+    //             if self.state == TrackState::Recording {
+    //                 self.recording_clip = None;
+    //             }
+
+    //             self.state = TrackState::Stopped;
+    //         }
+    //         if (new_state) == TrackState::ClearSample {
+    //             self.sampler.clear_sample();
+    //             self.state = TrackState::Stopped;
+    //         } else {
+    //             if (new_state == TrackState::Playing) {
+    //                 self.sampler.play();
+    //             }
+    //             self.state = new_state;
+    //         }
+    //     }
+    // }
+
+    pub fn handle_controller_messages(&mut self, mut new_state: TrackState) {
+        match (self.state.clone(), new_state.clone()) {
+            (TrackState::Stopped, TrackState::Playing) => {
+                self.sampler.play();
+            }
+            (_, TrackState::Stopped) => {
+                self.recording_clip = None;
                 self.sampler.stop();
-                self.sampler.reset_position();
-
-                if (self.state == TrackState::Recording) {
-                    self.recording_clip = None;
-                }
-
-                self.state = TrackState::Stopped;
             }
-            if (new_state) == TrackState::ClearSample {
-                self.sampler.clear_sample();
-                self.state = TrackState::Stopped;
-            } else {
-                self.state = new_state;
+            (_, TrackState::ClearSample) => {
+                self.clear_sample();
+                self.display_average_buffer.clear();
+
+                new_state = TrackState::Stopped;
             }
+            (TrackState::Recording, TrackState::Playing) => {
+                self.recording_clip = None;
+                self.display_average_buffer.clear();
+                new_state = TrackState::OnlyInput;
+            }
+            (TrackState::Paused, TrackState::Recording) => {
+                // self.recording_clip = None;
+                // self.display_average_buffer.clear();
+            }
+            _ => (),
         }
+        self.state = new_state;
     }
+
     fn handle_recording(&mut self) {
         if let Ok(sample) = self.input_receiver.try_recv() {
             self.audio_sender.send(sample).unwrap();
@@ -116,15 +150,14 @@ where
             }
 
             {
-                let clip = self
-                    .recording_clip
-                    .get_or_insert_with(|| Vec::with_capacity(self.initial_vec_size));
-
-                clip.push(sample.0);
-                clip.push(sample.1);
-
-                if clip.len() >= self.initial_vec_size {
-                    self.add_clip();
+                if let Some(clip) = self.recording_clip.as_mut() {
+                    clip.push(sample.0);
+                    clip.push(sample.1);
+                    if clip.len() >= self.initial_vec_size {
+                        self.add_clip();
+                    }
+                } else {
+                    panic!("We can't be here!");
                 }
             }
 
@@ -162,6 +195,8 @@ where
     }
     fn clear_sample(&mut self) {
         self.sampler.clear_sample();
+        self.recording_clip = Some(Vec::with_capacity(self.initial_vec_size));
+        self.display_average_buffer.clear();
     }
 }
 
@@ -170,16 +205,21 @@ where
     T: Send + Copy + Into<f32> + 'static,
 {
     std::thread::spawn(move || loop {
-        track.handle_controller_messages();
-
-        match track.state {
-            TrackState::Recording | TrackState::OnlyInput => track.handle_recording(),
-            TrackState::Playing => track.handle_playback(),
-            TrackState::Paused | TrackState::Stopped => {
-                std::thread::sleep(std::time::Duration::from_micros(3))
+        if track.state == TrackState::Stopped || track.state == TrackState::Paused {
+            if let Ok(msg) = track.controller_receiver.recv() {
+                track.handle_controller_messages(msg);
             }
-            TrackState::ClearSample => (),
-            TrackState::End => break,
+        } else {
+            if let Ok(msg) = track.controller_receiver.try_recv() {
+                track.handle_controller_messages(msg);
+            }
+            match track.state {
+                TrackState::Recording | TrackState::OnlyInput => track.handle_recording(),
+                TrackState::Playing => track.handle_playback(),
+                TrackState::Paused | TrackState::Stopped => (),
+                TrackState::ClearSample => (),
+                TrackState::End => break,
+            }
         }
     });
 }
@@ -205,7 +245,6 @@ pub fn build_track(
         next_loop_sender,
         audio_display_sender,
         sampler,
-        None,
         352800, // 44100k, 60 bpm, 4 beats, 2 bars
         display_vec_chunk_size,
     );

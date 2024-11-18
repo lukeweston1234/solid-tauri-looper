@@ -1,8 +1,9 @@
-use crate::audio::track::TrackController;
+use crate::audio::track::{TrackController, TrackState};
 use crate::audio::{metronome::MetronomeController, mixer::MixerNode};
 use crossbeam_channel::{bounded, Receiver, Sender};
 use crossbeam_channel::{select, select_biased};
 use fundsp::hacker32::*;
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::usize;
 use tauri::{AppHandle, Emitter};
@@ -19,12 +20,17 @@ pub enum AppControllerEnum {
     Exit,
     SetMixerGain(usize, f32),
     SetMixerReverbMix(usize, f32),
+    SetMasterGain(f32),
+    SetMasterReverbMix(f32),
     SetBPM(u32),
     SetBeatsPerMeasure(u32),
     SetBeatValue(u32),
     SetBars(u32),
+    ToggleMute(usize),
+    ToggleSolo(usize),
     StartMetronome,
     StopMetronome,
+    SendAddTrackEvent,
 }
 
 // This is gross, but I want to access nodes from an index,
@@ -62,7 +68,44 @@ impl MixerNodeEnum {
             MixerNodeEnum::MixerFeedback(_) => (),
         }
     }
+
+    fn toggle_mute(&mut self) {
+        match self {
+            MixerNodeEnum::MixerOne(node) => node.toggle_mute(),
+            MixerNodeEnum::MixerTwo(node) => node.toggle_mute(),
+            MixerNodeEnum::MixerThree(node) => node.toggle_mute(),
+            MixerNodeEnum::MixerFour(node) => node.toggle_mute(),
+            MixerNodeEnum::MixerFive(node) => node.toggle_mute(),
+            MixerNodeEnum::MixerSix(node) => node.toggle_mute(),
+            MixerNodeEnum::MixerFeedback(_) => (),
+        }
+    }
+
+    fn mute(&mut self) {
+        match self {
+            MixerNodeEnum::MixerOne(node) => node.mute(),
+            MixerNodeEnum::MixerTwo(node) => node.mute(),
+            MixerNodeEnum::MixerThree(node) => node.mute(),
+            MixerNodeEnum::MixerFour(node) => node.mute(),
+            MixerNodeEnum::MixerFive(node) => node.mute(),
+            MixerNodeEnum::MixerSix(node) => node.mute(),
+            MixerNodeEnum::MixerFeedback(_) => (),
+        }
+    }
+
+    fn unmute(&mut self) {
+        match self {
+            MixerNodeEnum::MixerOne(node) => node.unmute(),
+            MixerNodeEnum::MixerTwo(node) => node.unmute(),
+            MixerNodeEnum::MixerThree(node) => node.unmute(),
+            MixerNodeEnum::MixerFour(node) => node.unmute(),
+            MixerNodeEnum::MixerFive(node) => node.unmute(),
+            MixerNodeEnum::MixerSix(node) => node.unmute(),
+            MixerNodeEnum::MixerFeedback(_) => (),
+        }
+    }
 }
+
 pub struct AppController {
     sender: Sender<AppControllerEnum>,
 }
@@ -124,6 +167,21 @@ impl AppController {
     pub fn reset(&self) {
         let _ = self.sender.send(AppControllerEnum::Reset);
     }
+    pub fn set_master_reverb_wet(&self, wet: f32) {
+        let _ = self.sender.send(AppControllerEnum::SetMasterReverbMix(wet));
+    }
+    pub fn set_master_gain(&self, gain: f32) {
+        let _ = self.sender.send(AppControllerEnum::SetMasterGain(gain));
+    }
+    pub fn toggle_mute(&self, index: usize) {
+        let _ = self.sender.send(AppControllerEnum::ToggleMute(index));
+    }
+    pub fn toggle_solo(&self, index: usize) {
+        let _ = self.sender.send(AppControllerEnum::ToggleSolo(index));
+    }
+    pub fn add_track_to_client(&self) {
+        let _ = self.sender.send(AppControllerEnum::SendAddTrackEvent);
+    }
 }
 
 pub struct App {
@@ -140,6 +198,10 @@ pub struct App {
     track_controllers: Vec<TrackController>,
     mixers: Vec<MixerNodeEnum>,
     metronome_controller: Arc<MetronomeController>,
+    master_gain: Shared,
+    master_reverb_wet: Shared,
+    track_state: Vec<TrackState>,
+    is_solo: bool,
 }
 impl App {
     pub fn new(
@@ -149,6 +211,9 @@ impl App {
         mixers: Vec<MixerNodeEnum>,
         track_controllers: Vec<TrackController>,
         metronome_controller: Arc<MetronomeController>,
+        master_gain: Shared,
+        master_reverb_wet: Shared,
+        track_size: usize,
     ) -> Self {
         Self {
             bpm: 120,
@@ -157,13 +222,17 @@ impl App {
             beats_per_measure: 4,
             app_controller_receiver,
             active_recording_track_index: None,
-            track_size: 6, // 7th track is feedback only
+            track_size, // 7th track is feedback only
             next_loop_receiver,
             audio_visualization_receiver,
             state: AppControllerEnum::Stop,
             track_controllers,
             mixers,
             metronome_controller: metronome_controller,
+            master_gain,
+            master_reverb_wet,
+            track_state: vec![TrackState::Stopped; track_size],
+            is_solo: false,
         }
     }
     pub fn set_app_state(&mut self, new_state: &AppControllerEnum) {
@@ -218,34 +287,81 @@ impl App {
     pub fn set_beat_value(&mut self, beat_value: u32) {
         self.beat_value = beat_value;
     }
-    pub fn reset(&mut self) {
+    pub fn reset(&mut self, app_handle: &AppHandle) {
         for track in self.track_controllers.iter_mut() {
             track.clear_sample();
-            track.stop();
-            self.active_recording_track_index = Some(0);
         }
+        self.track_only_feedback(0);
+        self.active_recording_track_index = None;
+        self.add_track_to_client(app_handle);
     }
     pub fn advance_looping_track(&mut self, app_handle: &AppHandle) {
+        // First, we see if we are resuming any tracks, otherwise, we add a track
+        // for i in 0..self.track_size {
+        //     if let Some(track_state) = self.track_state.get(i) {
+        //         if *track_state == TrackState::Recording {
+        //             self.active_recording_track_index = Some(i);
+        //             self.record(i);
+        //             return;
+        //         }
+        //     }
+        // }
+
         if let Some(track_index) = self.active_recording_track_index {
             println!("{:?}", track_index);
-            if self.track_size > track_index {
+            if track_index + 1 < self.track_size {
                 self.active_recording_track_index = Some(track_index + 1);
                 self.record(track_index + 1);
                 let _ = app_handle.emit("track_added", self.active_recording_track_index);
             } else {
-                self.track_only_feedback(track_index);
+                self.track_only_feedback(track_index + 1);
             }
         } else {
             self.active_recording_track_index = Some(0);
             self.record(0);
-            let _ = app_handle.emit("track_added", self.active_recording_track_index);
         }
+    }
+    pub fn add_track_to_client(&mut self, app_handle: &AppHandle) {
+        // used for inti
+        let _ = app_handle.emit("track_added", 0);
     }
     pub fn start_metronome(&self) {
         self.metronome_controller.start();
     }
     pub fn stop_metronome(&self) {
         self.metronome_controller.stop();
+    }
+    pub fn set_master_gain(&self, value: f32) {
+        self.master_gain.set(value);
+    }
+    pub fn set_master_reverb_wet(&self, value: f32) {
+        self.master_reverb_wet.set(value);
+    }
+    pub fn toggle_mute(&mut self, index: usize) {
+        if let Some(mixer) = self.mixers.get_mut(index) {
+            mixer.toggle_mute();
+        }
+    }
+    pub fn toggle_solo(&mut self, index: usize) {
+        if self.is_solo {
+            self.unsolo();
+            self.is_solo = false;
+            return;
+        }
+        self.solo(index);
+        self.is_solo = true;
+    }
+    pub fn solo(&mut self, index: usize) {
+        for (i, mixer) in self.mixers.iter_mut().enumerate() {
+            if i != index {
+                mixer.mute();
+            }
+        }
+    }
+    pub fn unsolo(&mut self) {
+        for (i, mixer) in self.mixers.iter_mut().enumerate() {
+            mixer.unmute();
+        }
     }
 }
 
@@ -255,6 +371,8 @@ pub fn build_app(
     next_looper_receiver: Receiver<()>,
     audio_visualization_receiver: Receiver<f32>,
     metronome_controller: Arc<MetronomeController>,
+    master_gain: Shared,
+    master_reverb_wet: Shared,
 ) -> (AppController, App) {
     let (sender, receiver) = bounded(10);
 
@@ -267,6 +385,9 @@ pub fn build_app(
         mixers,
         track_controllers,
         metronome_controller,
+        master_gain,
+        master_reverb_wet,
+        6,
     );
 
     (app_controller, app)
@@ -297,7 +418,7 @@ pub fn run_app(mut app: App, app_handle: AppHandle) {
                                 app.track_only_feedback(track_index)
                             }
                             AppControllerEnum::Stop => app.stop(),
-                            AppControllerEnum::Reset => app.reset(),
+                            AppControllerEnum::Reset => app.reset(&app_handle),
                             AppControllerEnum::SetMixerGain(track_index, gain) => {
                                 app.set_mixer_gain(track_index, gain)
                             }
@@ -313,6 +434,11 @@ pub fn run_app(mut app: App, app_handle: AppHandle) {
                             AppControllerEnum::AdvanceLooper => app.advance_looping_track(&app_handle),
                             AppControllerEnum::StartMetronome => app.start_metronome(),
                             AppControllerEnum::StopMetronome => app.stop_metronome(),
+                            AppControllerEnum::SetMasterGain(gain) => app.set_master_gain(gain),
+                            AppControllerEnum::SetMasterReverbMix(wet) => app.set_master_reverb_wet(wet),
+                            AppControllerEnum::ToggleMute(index) => app.toggle_mute(index),
+                            AppControllerEnum::ToggleSolo(index) => app.toggle_solo(index),
+                            AppControllerEnum::SendAddTrackEvent => app.add_track_to_client(&app_handle),
                             AppControllerEnum::Exit => break,
                         }
                     }
