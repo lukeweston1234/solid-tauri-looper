@@ -38,8 +38,8 @@ export function AppStateProvider(props: { children: JSXElement }) {
   });
 
   const trackAddedListener = listen("track_added", (event) => {
-    console.log(event.payload);
     const recordingIndex = event.payload as number;
+    console.log("track index", recordingIndex);
     if (recordingIndex >= state.maxTracks) return;
     const tracks: TrackItem[] = [
       ...state.tracks,
@@ -67,6 +67,7 @@ export function AppStateProvider(props: { children: JSXElement }) {
 
     let recordingIndex = state.recordingTrackIndex;
     if (recordingIndex === null) throw new Error("No recording track index!");
+    console.log("track index", recordingIndex);
 
     setState((prevState) => {
       const tracks = [...prevState.tracks];
@@ -158,7 +159,19 @@ export function AppStateProvider(props: { children: JSXElement }) {
 
   async function reset() {
     await invoke("reset");
-    setState((prevState) => ({ ...prevState, status: "stopped", tracks: [] }));
+    setState((prevState) => ({
+      ...prevState,
+      status: "stopped",
+      tracks: [
+        {
+          ...prevState.tracks[0]!,
+          displayBuffer: {
+            position: 0,
+            buffer: Array(VISUALIZER_CHUNK_SIZE).fill(0),
+          },
+        },
+      ],
+    }));
   }
 
   const appState = [

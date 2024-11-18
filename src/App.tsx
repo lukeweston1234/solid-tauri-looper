@@ -9,7 +9,10 @@ import { emit } from "@tauri-apps/api/event";
 
 export default function App() {
   onMount(async () => {
-    await emit("app_ready");
+    console.log("emitting app ready");
+    setTimeout(async () => {
+      await emit("app_ready");
+    }, 2000);
   });
   return (
     <AppStateProvider>

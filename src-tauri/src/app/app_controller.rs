@@ -178,7 +178,7 @@ impl AppController {
     pub fn toggle_solo(&self, index: usize) {
         let _ = self.sender.send(AppControllerEnum::ToggleSolo(index));
     }
-    pub fn add_track_to_client(&self){
+    pub fn add_track_to_client(&self) {
         let _ = self.sender.send(AppControllerEnum::SendAddTrackEvent);
     }
 }
@@ -287,30 +287,28 @@ impl App {
         for track in self.track_controllers.iter_mut() {
             track.clear_sample();
             track.stop();
-            self.active_recording_track_index = Some(0);
+            self.active_recording_track_index = None;
         }
         self.track_only_feedback(0);
     }
     pub fn advance_looping_track(&mut self, app_handle: &AppHandle) {
         if let Some(track_index) = self.active_recording_track_index {
             println!("{:?}", track_index);
-            if  track_index < self.track_size {
+            if track_index + 1 < self.track_size {
                 self.active_recording_track_index = Some(track_index + 1);
                 self.record(track_index + 1);
                 let _ = app_handle.emit("track_added", self.active_recording_track_index);
             } else {
-                self.track_only_feedback(track_index);
+                self.track_only_feedback(track_index + 1);
             }
         } else {
             self.active_recording_track_index = Some(0);
             self.record(0);
-            let _ = app_handle.emit("track_added", self.active_recording_track_index);
         }
     }
-    pub fn add_track_to_client(&mut self, app_handle: &AppHandle){
+    pub fn add_track_to_client(&mut self, app_handle: &AppHandle) {
         // used for inti
         let _ = app_handle.emit("track_added", 0);
-        self.active_recording_track_index = Some(0);
     }
     pub fn start_metronome(&self) {
         self.metronome_controller.start();

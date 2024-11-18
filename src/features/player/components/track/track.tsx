@@ -29,10 +29,8 @@ export function Track(props: TrackItem & { isLast: boolean }) {
           props.isLast && "border-b-2"
         }`}
       >
-        <span class="absolute left-3 top-3">{props.index}</span>
-        <AudioVisualization
-          downsampledData={props.displayBuffer.buffer}
-        ></AudioVisualization>
+        <span class="absolute left-3 top-3">{props.index + 1}</span>
+        <AudioVisualization index={props.index}></AudioVisualization>
         <button class="absolute right-3 top-3">
           <svg
             width="20"

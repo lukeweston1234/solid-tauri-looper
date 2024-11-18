@@ -62,7 +62,6 @@ export default function Header() {
           </defs>
         </svg>
         <div class="flex items-center gap-6">
-          {/* TODO */}
           <span class="text-sm">MEM {memoryUsage()}%</span>
           <span class="text-sm">CPU {Math.round(cpuUsage() * 100) / 100}%</span>
         </div>

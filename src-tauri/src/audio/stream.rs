@@ -52,19 +52,19 @@ pub fn build_output_device(
 }
 
 pub fn build_input_device(sender: Sender<(f32, f32)>) {
-    let host;
-    #[cfg(target_os = "windows")]
-    {
-        host = cpal::host_from_id(cpal::HostId::Asio).expect("failed to initialise ASIO host");
-    }
-    #[cfg(target_os = "macos")]
-    {
-        host = default_host();
-    }
-    #[cfg(target_os = "linux")]
-    {
-        host = default_host();
-    }
+    let host = default_host();
+    // #[cfg(target_os = "windows")]
+    // {
+    //     host = cpal::host_from_id(cpal::HostId::Asio).expect("failed to initialise ASIO host");
+    // }
+    // #[cfg(target_os = "macos")]
+    // {
+    //     host = default_host();
+    // }
+    // #[cfg(target_os = "linux")]
+    // {
+    //     host = default_host();
+    // }
 
     // Start input.
     let in_device = host
@@ -78,7 +78,6 @@ pub fn build_input_device(sender: Sender<(f32, f32)>) {
     println!("Int sample rate: {:?}", in_config.sample_rate());
     println!("Int sample format: {:?}", in_config.sample_format());
     println!("Int sample format: {:?}", in_config.buffer_size());
-
 
     match in_config.sample_format() {
         cpal::SampleFormat::F32 => run_in::<f32>(&in_device, &in_config.into(), sender),

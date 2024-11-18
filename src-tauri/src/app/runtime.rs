@@ -3,9 +3,9 @@ use crate::audio::audio_graph::build_audio_graph;
 use crate::audio::metronome::{build_metronome, run_metronome};
 use crate::audio::stream::{build_input_device, build_output_device};
 use crate::audio::{mixer::MixerNode, track::build_track, track::run_track};
-use std::sync::{Arc};
 use crossbeam_channel::bounded;
 use fundsp::hacker32::*;
+use std::sync::Arc;
 
 use super::app_controller::{build_app, App, AppController, MixerNodeEnum};
 
