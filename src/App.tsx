@@ -25,7 +25,10 @@ export default function App() {
         </div>
 
         <div class="fixed inset-0 z-50 p-8 pb-12 overflow-clip flex flex-col gap-6">
-          <div class="w-full absolute left-0 top-0">
+          <div
+            data-tauri-drag-region
+            class="w-full absolute left-0 top-0 z-[100]"
+          >
             <Toolbar />
           </div>
           <Lighting />

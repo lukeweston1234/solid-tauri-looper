@@ -15,7 +15,6 @@
         "title": "solid-tauri-looper",
         "width": 1133,
         "height": 744,
-        "resizable": false,
         "transparent": true,
         "decorations": false
       }

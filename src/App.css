@@ -93,3 +93,7 @@ input[type=range]::-webkit-slider-runnable-track {
   touch-action: none;
   background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .2), rgba(0, 0, 0, .2) 2px, transparent 2px, transparent 3px);
 }
+
+[data-tauri-drag-region] {
+  -webkit-app-region: drag;
+}

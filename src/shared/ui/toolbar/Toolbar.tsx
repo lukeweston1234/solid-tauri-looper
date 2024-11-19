@@ -10,7 +10,7 @@ export default function Toolbar() {
     await getCurrentWindow().close();
   }
   return (
-    <div class="w-full flex justify-end gap-6 items-center p-3">
+    <div class=" flex justify-end gap-6 items-center p-3">
       <button onClick={minimize}>
         <svg
           xmlns="http://www.w3.org/2000/svg"
