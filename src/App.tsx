@@ -6,6 +6,7 @@ import Lighting from "./shared/ui/lighting/lighting";
 import ThemePicker from "./shared/ui/theme/themePicker";
 import { onMount } from "solid-js";
 import { emit } from "@tauri-apps/api/event";
+import Toolbar from "./shared/ui/toolbar/Toolbar";
 
 export default function App() {
   onMount(async () => {
@@ -24,6 +25,9 @@ export default function App() {
         </div>
 
         <div class="fixed inset-0 z-50 p-8 pb-12 overflow-clip flex flex-col gap-6">
+          <div class="w-full absolute left-0 top-0">
+            <Toolbar />
+          </div>
           <Lighting />
           <Header />
           <Player />
