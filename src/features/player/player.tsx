@@ -36,17 +36,17 @@ export function Player() {
               each={Array(
                 state.timeInformation.bars *
                   state.timeInformation.beatsPerMeasure *
-                  2
+                  state.timeInformation.beatValue
               )}
             >
               {(_, i) => (
                 <div
                   class={`h-full w-[1px] bg-app-primary ${
-                    i()
-                      ? i() % 2 == 0
-                        ? "opacity-30"
-                        : "opacity-10"
-                      : "opacity-0"
+                    i() % state.timeInformation.beatsPerMeasure == 0
+                      ? "opacity-60"
+                      : i() % 2 == 0
+                      ? "opacity-30"
+                      : "opacity-10"
                   } `}
                 ></div>
               )}

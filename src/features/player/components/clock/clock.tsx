@@ -9,7 +9,7 @@ export default function Clock() {
         <For each={new Array(state.timeInformation.bars)}>
           {(_, index) => (
             <>
-              <For each={new Array(state.timeInformation.beatsPerMeasure)}>
+              <For each={new Array(state.timeInformation.beatValue)}>
                 {(_, childIndex) => (
                   <span class="text-xs">{`${index() + 1}.${
                     childIndex() + 1
