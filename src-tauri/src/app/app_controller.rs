@@ -326,7 +326,7 @@ impl App {
         self.add_track_to_client(app_handle);
     }
     fn recompute_time(&mut self) {
-        let buffer_size = self.beats_per_measure * self.bars * (44_100 * 60 / self.bpm); // * 2 because stereo
+        let buffer_size = self.beats_per_measure * 2 * self.bars * (44_100 * 60 / self.bpm); // * 2 because stereo
         println!("bs {}", buffer_size);
         for track in self.track_controllers.iter_mut() {
             track.clear_sample();
