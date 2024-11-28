@@ -26,6 +26,10 @@ where
     pub fn play(&mut self) {
         self.is_playing = true;
     }
+    pub fn play_once(&mut self) {
+        self.position = 0;
+        self.is_playing = true;
+    }
     pub fn stop(&mut self) {
         self.is_playing = false;
         self.position = 0;

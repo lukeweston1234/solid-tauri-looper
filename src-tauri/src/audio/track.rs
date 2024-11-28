@@ -11,6 +11,7 @@ pub enum TrackState {
     Stopped,
     Recording,
     ClearSample,
+    RecomputeBufferSize(usize),
     End,
 }
 
@@ -41,6 +42,11 @@ impl TrackController {
     }
     pub fn end(&self) {
         let _ = self.sender.send(TrackState::End);
+    }
+    pub fn recompute_buffer_size(&self, buffer_size: usize) {
+        let _ = self
+            .sender
+            .send(TrackState::RecomputeBufferSize(buffer_size));
     }
 }
 
@@ -88,29 +94,13 @@ where
             display_average_buffer: Vec::with_capacity(initial_vec_size / display_vec_size),
         }
     }
-    // pub fn handle_controller_messages(&mut self) {
-    //     if let Ok(new_state) = self.controller_receiver.try_recv() {
-    //         if new_state == TrackState::Stopped {
-    //             self.sampler.stop();
-    //             self.sampler.reset_position();
 
-    //             if self.state == TrackState::Recording {
-    //                 self.recording_clip = None;
-    //             }
-
-    //             self.state = TrackState::Stopped;
-    //         }
-    //         if (new_state) == TrackState::ClearSample {
-    //             self.sampler.clear_sample();
-    //             self.state = TrackState::Stopped;
-    //         } else {
-    //             if (new_state == TrackState::Playing) {
-    //                 self.sampler.play();
-    //             }
-    //             self.state = new_state;
-    //         }
-    //     }
-    // }
+    pub fn recompute_buffer_size(&mut self, buffer_size: usize) {
+        println!("new size {}", buffer_size);
+        self.state = TrackState::Stopped;
+        self.initial_vec_size = buffer_size;
+        self.recording_clip = Some(Vec::with_capacity(buffer_size));
+    }
 
     pub fn handle_controller_messages(&mut self, mut new_state: TrackState) {
         match (self.state.clone(), new_state.clone()) {
@@ -135,6 +125,9 @@ where
             (TrackState::Paused, TrackState::Recording) => {
                 // self.recording_clip = None;
                 // self.display_average_buffer.clear();
+            }
+            (_, TrackState::RecomputeBufferSize(buffer_size)) => {
+                self.recompute_buffer_size(buffer_size);
             }
             _ => (),
         }
@@ -217,6 +210,9 @@ where
                 TrackState::Recording | TrackState::OnlyInput => track.handle_recording(),
                 TrackState::Playing => track.handle_playback(),
                 TrackState::Paused | TrackState::Stopped => (),
+                TrackState::RecomputeBufferSize(buffer_size) => {
+                    track.recompute_buffer_size(buffer_size)
+                }
                 TrackState::ClearSample => (),
                 TrackState::End => break,
             }
@@ -229,6 +225,7 @@ pub fn build_track(
     next_loop_sender: Sender<()>,
     audio_display_sender: Sender<f32>,
     display_vec_chunk_size: usize,
+    track_buffer_size: usize,
 ) -> (TrackController, Track<f32>, Receiver<(f32, f32)>) {
     let (track_state_sender, track_state_receiver) = unbounded::<TrackState>();
 
@@ -245,7 +242,7 @@ pub fn build_track(
         next_loop_sender,
         audio_display_sender,
         sampler,
-        352800, // 44100k, 60 bpm, 4 beats, 2 bars
+        track_buffer_size, // 44100k, 60 bpm, 4 beats, 2 bars
         display_vec_chunk_size,
     );
 

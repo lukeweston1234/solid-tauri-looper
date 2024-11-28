@@ -21,41 +21,57 @@ pub fn build_runtime() -> (Arc<AppController>, App) {
 
     let (visualizer_sender, visualizer_receiver) = bounded(256);
 
+    const DEFAULT_BPM: u32 = 120;
+    const DEFAULT_BARS: u32 = 4;
+    const DEFAULT_BEATS_PER_MEASURE: u32 = 4;
+    // const DEFAULT_BEAT_VALUE: u32 = 4;
+
+    const DEFAULT_RECORDING_BUFFER_SIZE: usize =
+        (DEFAULT_BEATS_PER_MEASURE * DEFAULT_BARS * 2 * (44_100 * 60) / DEFAULT_BPM) as usize;
+
+    println!("{}", DEFAULT_RECORDING_BUFFER_SIZE);
+
     let (track_one_controller, track_one, track_one_receiver) = build_track(
         audio_input_receiver.clone(),
         next_looper_sender.clone(),
         visualizer_sender.clone(),
         VISUALIZER_CHUNK_SIZE,
+        DEFAULT_RECORDING_BUFFER_SIZE,
     );
     let (track_two_controller, track_two, track_two_receiver) = build_track(
         audio_input_receiver.clone(),
         next_looper_sender.clone(),
         visualizer_sender.clone(),
         VISUALIZER_CHUNK_SIZE,
+        DEFAULT_RECORDING_BUFFER_SIZE,
     );
     let (track_three_controller, track_three, track_three_receiver) = build_track(
         audio_input_receiver.clone(),
         next_looper_sender.clone(),
         visualizer_sender.clone(),
         VISUALIZER_CHUNK_SIZE,
+        DEFAULT_RECORDING_BUFFER_SIZE,
     );
     let (track_four_controller, track_four, track_four_receiver) = build_track(
         audio_input_receiver.clone(),
         next_looper_sender.clone(),
         visualizer_sender.clone(),
         VISUALIZER_CHUNK_SIZE,
+        DEFAULT_RECORDING_BUFFER_SIZE,
     );
     let (track_five_controller, track_five, track_five_receiver) = build_track(
         audio_input_receiver.clone(),
         next_looper_sender.clone(),
         visualizer_sender.clone(),
         VISUALIZER_CHUNK_SIZE,
+        DEFAULT_RECORDING_BUFFER_SIZE,
     );
     let (track_six_controller, track_six, track_six_receiver) = build_track(
         audio_input_receiver.clone(),
         next_looper_sender.clone(),
         visualizer_sender.clone(),
         VISUALIZER_CHUNK_SIZE,
+        DEFAULT_RECORDING_BUFFER_SIZE,
     );
     // Feedback only
     let (feedback_track_controller, feedback_track, feedback_track_receiver) = build_track(
@@ -63,6 +79,7 @@ pub fn build_runtime() -> (Arc<AppController>, App) {
         next_looper_sender.clone(),
         visualizer_sender.clone(),
         VISUALIZER_CHUNK_SIZE,
+        DEFAULT_RECORDING_BUFFER_SIZE,
     );
 
     let mixer_one = An(MixerNode::<1>::new(track_one_receiver));

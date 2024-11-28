@@ -31,7 +31,7 @@ export function Track(props: TrackItem & { isLast: boolean }) {
       >
         <span class="absolute left-3 top-3">{props.index + 1}</span>
         <AudioVisualization index={props.index}></AudioVisualization>
-        <button class="absolute right-3 top-3">
+        {/* <button class="absolute right-3 top-3">
           <svg
             width="20"
             height="20"
@@ -47,7 +47,7 @@ export function Track(props: TrackItem & { isLast: boolean }) {
               stroke-linejoin="round"
             />
           </svg>
-        </button>
+        </button> */}
       </div>
       <div class="h-full flex gap-6 justify-between items-center">
         <div class="w-[26px] h-full flex items-center justify-center">

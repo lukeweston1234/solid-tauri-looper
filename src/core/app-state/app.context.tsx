@@ -9,6 +9,8 @@ export const AppStateContext = createContext<AppContextType>();
 
 const VISUALIZER_CHUNK_SIZE = 128;
 
+let timeout: any; // Used for debouncing interval for setting time, this will reallocate buffers for recording so it's expensive.
+
 export function AppStateProvider(props: { children: JSXElement }) {
   const [state, setState] = createStore<AppState>({
     recordingTrackIndex: 0,
@@ -18,23 +20,11 @@ export function AppStateProvider(props: { children: JSXElement }) {
     isMetronomeOn: false,
     maxTracks: 6,
     timeInformation: {
-      bars: 2,
+      bars: 4,
       beatValue: 4,
       beatsPerMeasure: 4,
     },
-    tracks: [
-      // {
-      //   index: 0,
-      //   displayBuffer: {
-      //     position: 0,
-      //     buffer: Array(VISUALIZER_CHUNK_SIZE).fill(0),
-      //   },
-      //   isMuted: false,
-      //   isSoloed: false,
-      //   reverbWet: 0.5,
-      //   volume: 1,
-      // },
-    ],
+    tracks: [],
   });
 
   const trackAddedListener = listen("track_added", (event) => {
@@ -95,7 +85,7 @@ export function AppStateProvider(props: { children: JSXElement }) {
     visualizerSampleListener.then((unlisten) => unlisten());
   });
 
-  function setTimeInformation(
+  async function setTimeInformation(
     beatsPerMeasure: number,
     beatValue: number,
     bars: number
@@ -103,11 +93,22 @@ export function AppStateProvider(props: { children: JSXElement }) {
     setState((prevState) => ({
       ...prevState,
       timeInformation: {
-        beatsPerMeasure: beatsPerMeasure,
-        beatValue: beatValue,
-        bars: bars,
+        beatsPerMeasure: Math.min(15, Math.max(1, beatsPerMeasure)),
+        beatValue: Math.min(8, Math.max(1, beatValue)),
+        bars: Math.min(8, Math.max(1, bars)),
       },
     }));
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    timeout = setTimeout(async () => {
+      await invoke("set_time_information", {
+        bpm: state.bpm,
+        beatValue: beatValue,
+        bars: bars,
+        beatsPerMeasure: beatsPerMeasure,
+      });
+    }, 200);
   }
 
   async function toggleMetronome() {
@@ -144,6 +145,7 @@ export function AppStateProvider(props: { children: JSXElement }) {
   }
 
   function setBPM(bpm: number) {
+    if (bpm > 200 || bpm < 30) return;
     setState((prevState) => ({
       ...prevState,
       bpm: bpm,

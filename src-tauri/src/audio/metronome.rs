@@ -1,13 +1,15 @@
 use super::{playable::Playable, sampler::Sampler};
 use crate::audio::audio_sample::load_wav_from_bytes;
-use crossbeam_channel::{bounded, Receiver, Sender};
+use crossbeam_channel::{bounded, select, tick, Receiver, Sender};
 use std::sync::Arc;
+use std::time::Duration;
 use std::{env::current_dir, time::Instant};
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum MetronomeState {
     Start,
     Stop,
+    SetBpm(u32),
 }
 
 pub struct MetronomeController {
@@ -22,6 +24,9 @@ impl MetronomeController {
     }
     pub fn stop(&self) {
         let _ = self.sender.send(MetronomeState::Stop);
+    }
+    pub fn set_bpm(&self, bpm: u32) {
+        let _ = self.sender.send(MetronomeState::SetBpm(bpm));
     }
 }
 
@@ -58,40 +63,68 @@ impl Metronome {
     pub fn stop(&mut self) {
         self.state = MetronomeState::Stop;
     }
+    pub fn set_bpm(&mut self, bpm: u32) {
+        self.state = MetronomeState::Stop;
+        self.bpm = bpm;
+    }
 }
 
 impl Playable<f32> for Metronome {
     fn next_sample(&mut self) -> Option<(f32, f32)> {
+        println!("{:?}", self.state);
         match self.state {
             MetronomeState::Start => self.sampler.next_sample(),
+            MetronomeState::SetBpm(_) => None,
             MetronomeState::Stop => None,
         }
     }
 }
 
 pub fn run_metronome(mut metronome: Metronome) {
-    std::thread::spawn(move || {
-        let mut last_beat = Instant::now();
-        loop {
+    let mut ticker = tick(Duration::from_secs_f64(60.0 / metronome.bpm as f64));
+
+    std::thread::spawn(move || loop {
+        if metronome.state == MetronomeState::Start {
+            while let Some(sample) = metronome.sampler.next_sample() {
+                let _ = metronome.sender.send(sample);
+            }
             if let Ok(msg) = metronome.controller_receiver.try_recv() {
                 match msg {
-                    MetronomeState::Start => metronome.start(),
+                    MetronomeState::Start => {
+                        metronome.start();
+                        ticker = tick(Duration::from_secs_f64(60.0 / metronome.bpm as f64));
+                    }
+                    MetronomeState::SetBpm(bpm) => {
+                        metronome.set_bpm(bpm);
+                        ticker = tick(Duration::from_secs_f64(60.0 / metronome.bpm as f64))
+                    }
                     MetronomeState::Stop => metronome.stop(),
                 }
             }
-            if metronome.state == MetronomeState::Start {
-                let interval = std::time::Duration::from_secs_f32(60.0 / metronome.bpm as f32);
-
-                if last_beat.elapsed() >= interval {
-                    last_beat = Instant::now();
-                    metronome.sampler.play();
+            if let Ok(_) = ticker.try_recv() {
+                if metronome.state == MetronomeState::Start {
+                    metronome.sampler.play_once();
                 }
-
-                if let Some(sample) = metronome.sampler.next_sample() {
-                    let _ = metronome.sender.send(sample);
+            }
+            std::thread::sleep(Duration::from_millis(1));
+        } else {
+            select! {
+                recv(metronome.controller_receiver) -> msg => {
+                    match msg {
+                        Ok(MetronomeState::Start) => metronome.start(),
+                        Ok(MetronomeState::SetBpm(bpm)) => {
+                            metronome.set_bpm(bpm);
+                            ticker = tick(Duration::from_secs_f64(60.0 / metronome.bpm as f64))
+                        },
+                        Ok(MetronomeState::Stop) => metronome.stop(),
+                        Err(err) => println!("{}", err)
+                    }
+                },
+                recv(ticker) -> _ => {
+                    if metronome.state == MetronomeState::Start {
+                        metronome.sampler.play();
+                    }
                 }
-            } else {
-                std::thread::sleep(std::time::Duration::from_millis(3));
             }
         }
     });

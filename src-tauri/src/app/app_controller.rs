@@ -24,6 +24,12 @@ pub enum AppControllerEnum {
     SetMasterReverbMix(f32),
     SetBPM(u32),
     SetBeatsPerMeasure(u32),
+    SetTimeInformation {
+        bpm: u32,
+        beat_value: u32,
+        beats_per_measure: u32,
+        bars: u32,
+    },
     SetBeatValue(u32),
     SetBars(u32),
     ToggleMute(usize),
@@ -144,6 +150,20 @@ impl AppController {
         println!("Advance looper!");
         let _ = self.sender.send(AppControllerEnum::AdvanceLooper);
     }
+    pub fn set_time_information(
+        &self,
+        bpm: u32,
+        beat_value: u32,
+        beats_per_measure: u32,
+        bars: u32,
+    ) {
+        let _ = self.sender.send(AppControllerEnum::SetTimeInformation {
+            bpm,
+            beat_value,
+            beats_per_measure,
+            bars,
+        });
+    }
     pub fn exit(&self) {
         let _ = self.sender.send(AppControllerEnum::Exit);
     }
@@ -163,6 +183,11 @@ impl AppController {
         let _ = self
             .sender
             .send(AppControllerEnum::SetBeatValue(beat_value));
+    }
+    pub fn set_beats_per_measure(&self, beats_per_measure: u32) {
+        let _ = self
+            .sender
+            .send(AppControllerEnum::SetBeatsPerMeasure(beats_per_measure));
     }
     pub fn reset(&self) {
         let _ = self.sender.send(AppControllerEnum::Reset);
@@ -215,6 +240,7 @@ impl App {
         master_reverb_wet: Shared,
         track_size: usize,
     ) -> Self {
+        metronome_controller.set_bpm(120);
         Self {
             bpm: 120,
             bars: 4,
@@ -277,15 +303,19 @@ impl App {
     }
     pub fn set_bpm(&mut self, bpm: u32) {
         self.bpm = bpm;
+        self.recompute_time();
     }
     pub fn set_beats_per_measure(&mut self, beats_per_measure: u32) {
         self.beats_per_measure = beats_per_measure;
+        self.recompute_time();
     }
     pub fn set_bars(&mut self, bars: u32) {
         self.bars = bars;
+        self.recompute_time();
     }
     pub fn set_beat_value(&mut self, beat_value: u32) {
         self.beat_value = beat_value;
+        self.recompute_time();
     }
     pub fn reset(&mut self, app_handle: &AppHandle) {
         for track in self.track_controllers.iter_mut() {
@@ -294,6 +324,30 @@ impl App {
         self.track_only_feedback(0);
         self.active_recording_track_index = None;
         self.add_track_to_client(app_handle);
+    }
+    fn recompute_time(&mut self) {
+        let buffer_size = self.beats_per_measure * self.bars * (44_100 * 60 / self.bpm); // * 2 because stereo
+        println!("bs {}", buffer_size);
+        for track in self.track_controllers.iter_mut() {
+            track.clear_sample();
+            track.recompute_buffer_size(buffer_size as usize);
+        }
+        self.track_only_feedback(0);
+        self.active_recording_track_index = None;
+        println!("Buffer's reallocated")
+    }
+    pub fn set_time_information(
+        &mut self,
+        bpm: u32,
+        beat_value: u32,
+        beats_per_measure: u32,
+        bars: u32,
+    ) {
+        self.bpm = bpm;
+        self.bars = bars;
+        self.beats_per_measure = beats_per_measure;
+        self.beat_value = beat_value;
+        self.recompute_time();
     }
     pub fn advance_looping_track(&mut self, app_handle: &AppHandle) {
         // First, we see if we are resuming any tracks, otherwise, we add a track
@@ -319,6 +373,10 @@ impl App {
         } else {
             self.active_recording_track_index = Some(0);
             self.record(0);
+            self.metronome_controller.start();
+        }
+        if self.active_recording_track_index != Some(0) {
+            self.metronome_controller.stop();
         }
     }
     pub fn add_track_to_client(&mut self, app_handle: &AppHandle) {
@@ -425,6 +483,7 @@ pub fn run_app(mut app: App, app_handle: AppHandle) {
                             AppControllerEnum::SetMixerReverbMix(track_index, mix) => {
                                 app.set_mixer_reverb_mix(track_index, mix);
                             }
+                            AppControllerEnum::SetTimeInformation { bpm, beat_value, beats_per_measure, bars} => app.set_time_information(bpm, beat_value, beats_per_measure, bars),
                             AppControllerEnum::SetBPM(bpm) => app.set_bpm(bpm),
                             AppControllerEnum::SetBars(bars) => app.set_bars(bars),
                             AppControllerEnum::SetBeatValue(beat_value) => app.set_beat_value(beat_value),

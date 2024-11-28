@@ -18,7 +18,11 @@ pub fn stop(app_controller: tauri::State<Arc<AppController>>) {
 }
 
 #[command]
-pub fn set_mixer_gain(app_controller: tauri::State<Arc<AppController>>, track_index: usize, gain: f32) {
+pub fn set_mixer_gain(
+    app_controller: tauri::State<Arc<AppController>>,
+    track_index: usize,
+    gain: f32,
+) {
     app_controller.set_mixer_gain(track_index, gain);
 }
 
@@ -59,6 +63,17 @@ pub fn toggle_mute(app_controller: tauri::State<Arc<AppController>>, track_index
 #[command]
 pub fn track_only_feedback(app_controller: tauri::State<Arc<AppController>>, track_index: usize) {
     app_controller.track_only_feedback(track_index);
+}
+
+#[command]
+pub fn set_time_information(
+    app_controller: tauri::State<Arc<AppController>>,
+    bpm: u32,
+    beat_value: u32,
+    beats_per_measure: u32,
+    bars: u32,
+) {
+    app_controller.set_time_information(bpm, beat_value, beats_per_measure, bars);
 }
 
 #[command]

@@ -56,10 +56,21 @@ export default function Header() {
   onCleanup(() => unlisten.then((x) => x()));
 
   function updateBpm(mutliplier: number) {
+    if (appState.status !== "stopped") return;
     setBPM(appState.bpm + 1 * mutliplier);
   }
 
+  function updateBars(mutliplier: number) {
+    if (appState.status !== "stopped") return;
+    setTimeInformation(
+      appState.timeInformation.beatsPerMeasure,
+      appState.timeInformation.beatValue,
+      appState.timeInformation.bars + 1 * mutliplier
+    );
+  }
+
   function updateBeats(mutliplier: number) {
+    if (appState.status !== "stopped") return;
     setTimeInformation(
       appState.timeInformation.beatsPerMeasure + 1 * mutliplier,
       appState.timeInformation.beatValue,
@@ -68,6 +79,7 @@ export default function Header() {
   }
 
   function updateBeatValue(mutliplier: number) {
+    if (appState.status !== "stopped") return;
     setTimeInformation(
       appState.timeInformation.beatsPerMeasure,
       appState.timeInformation.beatValue + 1 * mutliplier,
@@ -104,6 +116,9 @@ export default function Header() {
             </span>
           </div>
         </div>
+        {
+          // After this we have BPM information
+        }
         <div class="flex gap-4 items-center justify-center">
           <Show
             when={appState.status === "paused" || appState.status === "stopped"}
@@ -278,8 +293,11 @@ export default function Header() {
                 </button>
               </div>
               <span class="text-nowrap text-sm">{`${appState.bpm} BPM`}</span>
-            </div>
+            </div>{" "}
             <div class="flex items-center gap-2">
+              {
+                // BPM
+              }
               <div class="flex gap-1 flex-col">
                 <button onClick={() => updateBeats(1)}>
                   <svg
@@ -314,6 +332,9 @@ export default function Header() {
                   </svg>
                 </button>
               </div>
+              {
+                // Time signature
+              }
               <span class="text-sm">{`${appState.timeInformation.beatsPerMeasure}/${appState.timeInformation.beatValue}`}</span>
               <div class="flex gap-1 flex-col">
                 <button onClick={() => updateBeatValue(1)}>
@@ -350,6 +371,48 @@ export default function Header() {
                   </svg>
                 </button>
               </div>
+            </div>
+            {
+              // Bars
+            }
+            <div class="flex items-center gap-2 w-[72px]">
+              <div class="flex gap-1 flex-col">
+                <button onMouseUp={() => updateBars(1)}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="size-3 text-app-primary"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m4.5 15.75 7.5-7.5 7.5 7.5"
+                    />
+                  </svg>
+                </button>
+                <button onMouseUp={() => updateBars(-1)}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="size-3 text-app-primary"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <span class="text-nowrap text-sm">{`${
+                appState.timeInformation.bars
+              } ${appState.timeInformation.bars === 1 ? "BAR" : "BARS"}`}</span>
             </div>
           </div>
         </div>

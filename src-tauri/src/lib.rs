@@ -31,6 +31,7 @@ pub fn run() {
             set_mixer_reverb_wet,
             set_master_reverb_wet,
             set_master_gain,
+            set_time_information,
             toggle_solo,
             toggle_mute,
             start_metronome,
