@@ -5,6 +5,7 @@ use window_vibrancy::apply_acrylic;
 use crate::api::api::*;
 use crate::app::app_controller::run_app;
 use crate::app::runtime::build_runtime;
+use crate::audio::metronome::run_metronome;
 
 mod api;
 mod app;
@@ -12,7 +13,7 @@ mod audio;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let (app_controller, runtime) = build_runtime();
+    let (app_controller, runtime, metronome) = build_runtime();
 
     let app_controller_handle = app_controller.clone();
 
@@ -45,6 +46,8 @@ pub fn run() {
             apply_acrylic(&window, Some((0, 0, 0, 1))).expect("Unsupported platform");
 
             run_app(runtime, app_handle.clone());
+
+            run_metronome(metronome, app_handle.clone());
 
             app_handle.listen_any("app_ready", move |_event| {
                 println!("App Ready");

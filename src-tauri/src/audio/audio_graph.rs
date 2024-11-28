@@ -15,7 +15,7 @@ pub fn build_audio_graph(
     mixer_six: An<MixerNode<6>>,
     mixer_feedback: An<MixerNode<7>>,
 ) -> (Box<dyn AudioUnit>, Shared, Shared) {
-    let reverb = reverb2_stereo(20.0, 3.0, 1.0, 0.2, highshelf_hz(1000.0, 1.0, db_amp(-1.0)));
+    let reverb = reverb2_stereo(20.0, 3.0, 1.0, 0.2, highshelf_hz(1000.0, 1.0, db_amp(0.0)));
     let chorus = chorus(0, 0.0, 0.03, 0.2) | chorus(1, 0.0, 0.03, 0.2);
 
     let mx_one_wet = mixer_one.get_reverb_mix();

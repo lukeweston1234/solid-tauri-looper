@@ -1,6 +1,6 @@
 // use crate::app::system_info::emit_system_info;
 use crate::audio::audio_graph::build_audio_graph;
-use crate::audio::metronome::{build_metronome, run_metronome};
+use crate::audio::metronome::{build_metronome, run_metronome, Metronome};
 use crate::audio::stream::{build_input_device, build_output_device};
 use crate::audio::{mixer::MixerNode, track::build_track, track::run_track};
 use crossbeam_channel::bounded;
@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use super::app_controller::{build_app, App, AppController, MixerNodeEnum};
 
-pub fn build_runtime() -> (Arc<AppController>, App) {
+pub fn build_runtime() -> (Arc<AppController>, App, Metronome) {
     // env::set_var("RUST_BACKTRACE", "full");
 
     const VISUALIZER_CHUNK_SIZE: usize = 128;
@@ -108,9 +108,8 @@ pub fn build_runtime() -> (Arc<AppController>, App) {
         mixer_feedback.clone(),
     );
 
-    let (metronome_controller, metronome, metronome_buffer_receiver) = build_metronome(60);
-
-    run_metronome(metronome);
+    let (metronome_controller, metronome, metronome_buffer_receiver) =
+        build_metronome(60, DEFAULT_BARS * DEFAULT_BEATS_PER_MEASURE);
 
     build_input_device(audio_input_sender);
 
@@ -146,5 +145,5 @@ pub fn build_runtime() -> (Arc<AppController>, App) {
         master_reverb,
     );
 
-    (Arc::new(app_controller), app)
+    (Arc::new(app_controller), app, metronome)
 }
