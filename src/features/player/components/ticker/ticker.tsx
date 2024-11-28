@@ -15,8 +15,15 @@ export default function Ticker() {
     state.bpm;
   const loopInterval = (loopTime / 250) * 1000;
 
+  const trackedStatus = () => state.status;
   createEffect(() => {
+    // existing logic
+  });
+  createEffect(() => {
+    console.log("Effect triggered, state.status:", state.status);
+
     setPosition(0);
+    setLoopStartInstant(Date.now());
     if (state.status === "playing" || state.status === "recording") {
       tickerInterval = setInterval(() => {
         if (state.status !== "playing" && state.status !== "recording") return;

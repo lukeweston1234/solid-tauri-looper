@@ -30,9 +30,9 @@ export function Player() {
         </div>
         <div
           id="track-container"
-          class="h-auto flex-1 flex flex-col overflow-y-auto relative"
+          class="h-full flex flex-col overflow-y-auto relative"
         >
-          <div class="absolute top-0 left-0 bottom-0 w-[calc(100%-218px)] grid grid-flow-col">
+          <div class="absolute top-0 left-0 h-full w-[calc(100%-218px)] grid grid-flow-col">
             <For
               each={Array(
                 state.timeInformation.bars *
