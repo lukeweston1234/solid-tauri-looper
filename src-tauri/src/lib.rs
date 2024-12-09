@@ -1,6 +1,6 @@
 use app::system_info::emit_system_info;
 use tauri::{Listener, Manager};
-use window_vibrancy::apply_acrylic;
+use window_vibrancy::{apply_acrylic,apply_vibrancy, NSVisualEffectMaterial};
 
 use crate::api::api::*;
 use crate::app::app_controller::run_app;
@@ -41,8 +41,13 @@ pub fn run() {
         .setup(move |app| {
             let app_handle = app.app_handle();
 
+
             let window = app.get_webview_window("main").unwrap();
 
+            #[cfg(target_os = "macos")]
+            apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, None).expect("Unsupported platform! 'apply_vibrancy' is only supported on macOS");
+
+            #[cfg(target_os = "windows")]
             apply_acrylic(&window, Some((0, 0, 0, 1))).expect("Unsupported platform");
 
             run_app(runtime, app_handle.clone());

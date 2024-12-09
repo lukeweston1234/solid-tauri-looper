@@ -15,6 +15,7 @@ For windows, you may have much lower latency from smaller buffers with ASIO (atl
 You will want to use the LLVM-18.1.8-win64/32.exe installer, make sure to add it to your path
 
 ```
+npm install
 cargo install tauri-cli
 cargo tauri dev --release
 ```
