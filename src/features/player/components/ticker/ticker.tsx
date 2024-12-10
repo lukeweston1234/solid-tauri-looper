@@ -10,20 +10,18 @@ export default function Ticker() {
 
   let tickerInterval: any;
 
-  const loopTime =
-    (state.timeInformation.beatsPerMeasure * state.timeInformation.bars * 60) /
-    state.bpm;
-  const loopInterval = (loopTime / 250) * 1000;
-
-  const trackedStatus = () => state.status;
-  createEffect(() => {
-    // existing logic
-  });
   createEffect(() => {
     console.log("Effect triggered, state.status:", state.status);
 
+
+    const loopTime =
+      (state.timeInformation.beatsPerMeasure * state.timeInformation.bars * 60) /
+      state.bpm;
+    const loopInterval = (loopTime / 250) * 1000;
+
     setPosition(0);
     setLoopStartInstant(Date.now());
+
     if (state.status === "playing" || state.status === "recording") {
       tickerInterval = setInterval(() => {
         if (state.status !== "playing" && state.status !== "recording") return;
@@ -46,7 +44,7 @@ export default function Ticker() {
     }
   });
 
-  onCleanup(() => clearInterval(tickerInterval));
+  onCleanup(() => tickerInterval && clearInterval(tickerInterval));
 
   return (
     <div id="ticker" class="w-full h-full relative z-[100]">

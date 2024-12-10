@@ -27,6 +27,7 @@ impl MetronomeController {
         let _ = self.sender.send(MetronomeState::Stop);
     }
     pub fn set_bpm(&self, bpm: u32) {
+        println!("In set bpm");
         let _ = self.sender.send(MetronomeState::SetBpm(bpm));
     }
     // pub fn set_maximum_beat(&self, maximum_beat: u32) {
@@ -74,6 +75,7 @@ impl Metronome {
         self.state = MetronomeState::Stop;
     }
     pub fn set_bpm(&mut self, bpm: u32) {
+        println!("In set_bpm actor");
         self.state = MetronomeState::Stop;
         self.bpm = bpm;
     }
@@ -110,6 +112,7 @@ pub fn run_metronome(mut metronome: Metronome, app_handle: AppHandle) {
                     }
                     MetronomeState::SetBpm(bpm) => {
                         metronome.set_bpm(bpm);
+                        println!("Setting new bpm: {}", bpm);
                         ticker = tick(Duration::from_secs_f64(60.0 / metronome.bpm as f64))
                     }
                     MetronomeState::Stop => metronome.stop(),
@@ -136,10 +139,9 @@ pub fn run_metronome(mut metronome: Metronome, app_handle: AppHandle) {
                     match msg {
                         Ok(MetronomeState::Start) => metronome.start(),
                         Ok(MetronomeState::SetBpm(bpm)) => {
+                            println!("Setting new bpm: {}", bpm);
                             metronome.set_bpm(bpm);
                             ticker = tick(Duration::from_secs_f64(60.0 / metronome.bpm as f64));
-                            app_handle.emit("clock_reset", ());
-
                         },
                         Ok(MetronomeState::Stop) => metronome.stop(),
                         // Ok(MetronomeState::SetMaximumBeat(maximum_beat)) => metronome.set_maximum_beats(maximum_beat),

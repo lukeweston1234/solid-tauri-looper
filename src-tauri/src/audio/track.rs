@@ -96,7 +96,6 @@ where
     }
 
     pub fn recompute_buffer_size(&mut self, buffer_size: usize) {
-        println!("new size {}", buffer_size);
         self.state = TrackState::Stopped;
         self.initial_vec_size = buffer_size;
         self.recording_clip = Some(Vec::with_capacity(buffer_size));

@@ -145,11 +145,23 @@ export function AppStateProvider(props: { children: JSXElement }) {
   }
 
   function setBPM(bpm: number) {
+    console.log(bpm)
     if (bpm > 200 || bpm < 30) return;
     setState((prevState) => ({
       ...prevState,
       bpm: bpm,
     }));
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    timeout = setTimeout(async () => {
+      await invoke("set_time_information", {
+        bpm: bpm,
+        beatValue: state.timeInformation.beatValue,
+        bars: state.timeInformation.bars,
+        beatsPerMeasure: state.timeInformation.beatsPerMeasure,
+      });
+    }, 200);
   }
 
   function setVolume(volume: number) {

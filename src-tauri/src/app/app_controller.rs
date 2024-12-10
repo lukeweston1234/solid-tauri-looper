@@ -303,6 +303,7 @@ impl App {
     }
     pub fn set_bpm(&mut self, bpm: u32) {
         self.bpm = bpm;
+        self.metronome_controller.set_bpm(self.bpm);
         self.recompute_time();
     }
     pub fn set_beats_per_measure(&mut self, beats_per_measure: u32) {
@@ -327,14 +328,12 @@ impl App {
     }
     fn recompute_time(&mut self) {
         let buffer_size = self.beats_per_measure * 2 * self.bars * (44_100 * 60 / self.bpm); // * 2 because stereo
-        println!("bs {}", buffer_size);
         for track in self.track_controllers.iter_mut() {
             track.clear_sample();
             track.recompute_buffer_size(buffer_size as usize);
         }
         self.track_only_feedback(0);
         self.active_recording_track_index = None;
-        println!("Buffer's reallocated")
     }
     pub fn set_time_information(
         &mut self,
@@ -348,18 +347,11 @@ impl App {
         self.beats_per_measure = beats_per_measure;
         self.beat_value = beat_value;
         self.recompute_time();
+        self.metronome_controller.set_bpm(bpm);
+        println!("In set time");
     }
     pub fn advance_looping_track(&mut self, app_handle: &AppHandle) {
         // First, we see if we are resuming any tracks, otherwise, we add a track
-        // for i in 0..self.track_size {
-        //     if let Some(track_state) = self.track_state.get(i) {
-        //         if *track_state == TrackState::Recording {
-        //             self.active_recording_track_index = Some(i);
-        //             self.record(i);
-        //             return;
-        //         }
-        //     }
-        // }
 
         if let Some(track_index) = self.active_recording_track_index {
             println!("{:?}", track_index);
@@ -371,9 +363,9 @@ impl App {
                 self.track_only_feedback(track_index + 1);
             }
         } else {
+            self.metronome_controller.start();
             self.active_recording_track_index = Some(0);
             self.record(0);
-            self.metronome_controller.start();
         }
         if self.active_recording_track_index != Some(0) {
             self.metronome_controller.stop();

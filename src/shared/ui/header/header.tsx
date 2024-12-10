@@ -259,7 +259,7 @@ export default function Header() {
           >
             <div class="flex items-center gap-2">
               <div class="flex gap-1 flex-col">
-                <button onMouseUp={() => updateBpm(1)}>
+                <button onClick={() => updateBpm(1)}>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
@@ -275,7 +275,7 @@ export default function Header() {
                     />
                   </svg>
                 </button>
-                <button onMouseUp={() => updateBpm(-1)}>
+                <button onClick={() => updateBpm(-1)}>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
@@ -295,9 +295,6 @@ export default function Header() {
               <span class="text-nowrap text-sm">{`${appState.bpm} BPM`}</span>
             </div>{" "}
             <div class="flex items-center gap-2">
-              {
-                // BPM
-              }
               <div class="flex gap-1 flex-col">
                 <button onClick={() => updateBeats(1)}>
                   <svg
