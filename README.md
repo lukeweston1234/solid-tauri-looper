@@ -12,6 +12,8 @@ First, install the tauri CLI, you can then run with tauri dev, the release flag 
 For windows, you may have much lower latency from smaller buffers with ASIO (atleast from my experience).
 [Install LLVM for the CPAL ASIO installer for windows here](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.8)
 
+Note: You may want to double check and see if the branch you are on is using ASIO in the stream.rs file
+
 You will want to use the LLVM-18.1.8-win64/32.exe installer, make sure to add it to your path
 
 ```
