@@ -47,6 +47,7 @@ input[type=range] {
   height: 24px;
   background: none;
   -webkit-appearance: none;
+  appearance: none;
 }
 
 input[type=range]::-webkit-slider-thumb {
