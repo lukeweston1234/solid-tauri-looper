@@ -1,6 +1,6 @@
 # Looper Demo
 
-[![Everything Is AWESOME](https://img.youtube.com/vi/tmZAew8MZ-Q&lc=UgwCs7TRIIKJUwdgtih4AaABAg/0.jpg)](https://www.youtube.com/watch?v=tmZAew8MZ-Q&lc=UgwCs7TRIIKJUwdgtih4AaABAg "Demo")
+[![Demo](https://img.youtube.com/vi/tmZAew8MZ-Q&lc=UgwCs7TRIIKJUwdgtih4AaABAg/0.jpg)](https://www.youtube.com/watch?v=tmZAew8MZ-Q&lc=UgwCs7TRIIKJUwdgtih4AaABAg "Demo")
 
 This is a Tauri application, which uses a SolidJS frontend, combined with a Rust backend.
 ### Development Setup
