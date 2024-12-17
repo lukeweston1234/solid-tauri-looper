@@ -39,7 +39,6 @@ cargo tauri dev --release
 - [ ] Midi in, midi looping, clock out.
 - [ ] Once I have these features in place, I plan on profiling quite a bit to hopefully get this to work on something like a RaspberryPI 4/5.
 - [ ] Audio export, this really shouldn't be too hard. Naively I just want to spin up a thread to pass samples too and the app will just write, should not be too hard.
-- [ ] Support for loading samples of different audio formats than f32 .wav.
 - [ ] Sampler view with ADSR, setting different points, pitching up and down. I probably want to tackle this after the audio graph so I can reuse anything found here.
 - [ ] A master compressor would be nice, I want an algorithm that has a bit of character.
 - [ ] SQLite support for saved sessions, saved themes, default themes, etc.
